@@ -45,7 +45,7 @@ app.use('/api/user/referral',referralRoutes)
 app.use('/api/user/favourite',favouriteRoutes)
 app.use('/api/user/compare',comparisonRoutes)
 app.use('/api/user/homeloan',homeLoanRoutes)
-app.use('/apo/user/property',userPropertyRoutes)
+app.use('/api/user/property',userPropertyRoutes)
 
 
 require('./DB/connection');

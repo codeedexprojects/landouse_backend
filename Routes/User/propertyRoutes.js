@@ -6,7 +6,7 @@ const jwtVerify = require('../../Middlewares/jwtMiddleware')
 
 
 // Get all properties (for admin/vendor dashboard view)
-router.get('/get', jwtVerify(['user']), propertyController.getAllProperties);
+router.get('/get', propertyController.getAllProperties);
 
 // Optional: get single property
 router.get('/:id',jwtVerify(['user']), propertyController.getPropertyById);
