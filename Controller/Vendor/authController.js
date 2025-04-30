@@ -1,92 +1,154 @@
-// controllers/vendorController.js
 const Vendor = require('../../Models/Vendor/vendorModel');
 const jwt = require('jsonwebtoken');
 const OTPs = {};
 const sendOtp = require('../../utils/sendOTP');
 
+// Step 1: Send OTP for Registration
+exports.sendOtpForRegistration = async (req, res) => {
+  const { name, role, number, city, state, postCode, email, aboutVendor } = req.body;
 
-exports.sendOtpToVendor = async (req, res) => {
-    const { number } = req.body;
-  
-    try {
-      // Use hardcoded OTP for testing
-      const otp = '123456';
-      
-      // Store the OTP with the number in memory
-      OTPs[number] = otp;
-  
-      // Send OTP to vendor's phone
-      await sendOtp(number, otp);
-      
-      res.status(200).json({ message: `OTP sent successfully to ${number}` });
-    } catch (err) {
-      console.error('Error sending OTP:', err);
-      res.status(500).json({ message: 'Failed to send OTP' });
-    }
+  if (!name || !role || !number) {
+    return res.status(400).json({ message: 'Name, role, and number are required.' });
+  }
+
+  try {
+    const otp = '123456'; // Use random in production
+
+    OTPs[number] = {
+      otp,
+      name,
+      role,
+      city,
+      state,
+      postCode,
+      email,
+      aboutVendor,
+      type: 'registration'
+    };
+
+    await sendOtp(number, otp);
+
+    res.status(200).json({ message: `OTP sent to ${number}` });
+  } catch (err) {
+    console.error('Send OTP error:', err);
+    res.status(500).json({ message: 'Failed to send OTP' });
+  }
 };
 
-//login
-exports.loginOrRegisterVendor = async (req, res) => {
-    const { number, otp } = req.body;
-  
-    try {
-      // Step 1: Validate OTP
-      if (!otp || otp !== OTPs[number]) {
-        return res.status(400).json({ message: 'Invalid OTP' });
-      }
-  
-      // Step 2: Check if vendor exists
-      let vendor = await Vendor.findOne({ number });
-  
-      if (!vendor) {
-        // Step 3: Vendor does not exist => Create vendor with approvalStatus as false
-        vendor = new Vendor({
-          number,
-          approvalStatus: false, // Admin approval pending
-        });
-  
-        await vendor.save();
-  
-        // OTP expires, remove it from memory
-        delete OTPs[number];
-  
-        return res.status(201).json({
-          message: 'Vendor registered successfully. Awaiting admin approval.',
-        });
-      }
-  
-      // Step 4: If vendor exists, check approval
-      if (!vendor.approvalStatus) {
-        // OTP expires, remove it from memory
-        delete OTPs[number];
-  
-        return res.status(403).json({
-          message: 'Account pending approval by admin.',
-        });
-      }
-  
-      // Step 5: Vendor exists and is approved => Issue JWT token
-      const token = jwt.sign({ vendorId: vendor._id }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
-      });
-  
-      // OTP expires, remove it from memory
-      delete OTPs[number];
-  
-      res.status(200).json({
-        message: 'Login successful',
-        token,
-      });
-    } catch (err) {
-      console.error('Error in loginOrRegisterVendor:', err);
-      res.status(500).json({ message: 'Server error' });
+// Step 2: Verify OTP & Register Vendor
+exports.verifyRegistrationOtp = async (req, res) => {
+  const { number, otp } = req.body;
+
+  try {
+    const data = OTPs[number];
+
+    if (!data || data.otp !== otp || data.type !== 'registration') {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
-  };
+
+    let vendor = await Vendor.findOne({ number });
+
+    if (vendor) {
+      return res.status(400).json({ message: 'Vendor already exists. Please login.' });
+    }
+
+    vendor = new Vendor({
+      number,
+      name: data.name,
+      role: data.role,
+      city: data.city,
+      state: data.state,
+      postCode: data.postCode,
+      email: data.email,
+      aboutVendor: data.aboutVendor,
+      approvalStatus: false
+    });
+
+    await vendor.save();
+    delete OTPs[number];
+
+    res.status(201).json({
+      message: 'Vendor registered successfully. Awaiting admin approval.'
+    });
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ message: 'Server error during registration' });
+  }
+};
+
+// Step 3: Send OTP for Login (with role)
+exports.sendOtpForLogin = async (req, res) => {
+  const { number, role } = req.body;
+
+  if (!number || !role) {
+    return res.status(400).json({ message: 'Number and role are required' });
+  }
+
+  try {
+    const vendor = await Vendor.findOne({ number, role });
+
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor not found. Please register.' });
+    }
+
+    const otp = '123456'; // Use random OTP in production
+
+    OTPs[number] = { otp, role, type: 'login' };
+
+    await sendOtp(number, otp);
+
+    res.status(200).json({ message: `OTP sent to ${number}` });
+  } catch (err) {
+    console.error('Send OTP error:', err);
+    res.status(500).json({ message: 'Failed to send OTP' });
+  }
+};
+
+// Step 4: Verify OTP & Login Vendor (with role)
+exports.verifyLoginOtp = async (req, res) => {
+  const { number, otp, role } = req.body;
+
+  if (!number || !otp || !role) {
+    return res.status(400).json({ message: 'Number, role, and OTP are required' });
+  }
+
+  try {
+    const data = OTPs[number];
+
+    if (!data || data.otp !== otp || data.type !== 'login' || data.role !== role) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    const vendor = await Vendor.findOne({ number, role });
+
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor not found' });
+    }
+
+    if (!vendor.approvalStatus) {
+      return res.status(403).json({ message: 'Vendor not approved by admin' });
+    }
+
+    const token = jwt.sign({ vendorId: vendor._id }, process.env.JWT_SECRET, {
+      expiresIn: '1h'
+    });
+
+    delete OTPs[number];
+
+    res.status(200).json({ message: 'Login successful', token });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Server error during login' });
+  }
+};
+
+
+  
 
 // Update vendor profile after approval using vendorId in URL
 exports.updateProfile = async (req, res) => {
     const { state, postCode, email, aboutVendor, profileImage, city, name, role } = req.body;
-    const { vendorId } = req.params; // Now getting vendorId from params
+    const { vendorId } = req.params; 
   
     try {
       // Step 1: Find the vendor by their ID
