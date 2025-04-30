@@ -24,6 +24,7 @@ const referralRoutes=require('./Routes/User/referralRoutes')
 const favouriteRoutes=require('./Routes/User/favouriteRoutes')
 const comparisonRoutes=require('./Routes/User/comparisonRoutes')
 const homeLoanRoutes=require('./Routes/User/homeLoanRoutes')
+const userPropertyRoutes=require('./Routes/User/propertyRoutes')
 
 // admin routes
 app.use('/api/admin/auth',adminAuthRoutes)
@@ -44,6 +45,7 @@ app.use('/api/user/referral',referralRoutes)
 app.use('/api/user/favourite',favouriteRoutes)
 app.use('/api/user/compare',comparisonRoutes)
 app.use('/api/user/homeloan',homeLoanRoutes)
+app.use('/apo/user/property',userPropertyRoutes)
 
 
 require('./DB/connection');

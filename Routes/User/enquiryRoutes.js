@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const enquiryController = require('../../Controller/User/enquiryController');
-// const authenticate = require('../middleware/authMiddleware'); 
+const jwtVerify = require('../../Middlewares/jwtMiddleware')
+
 
 // Route to create enquiry
-router.post('/send/:userId', enquiryController.createEnquiry);
+router.post('/send/:userId',jwtVerify(['user']), enquiryController.createEnquiry);
 
 // Route to get user's enquiries
-router.get('/view/:userId', enquiryController.getUserEnquiries);
+router.get('/view/:userId',jwtVerify(['user']), enquiryController.getUserEnquiries);
 
 module.exports = router;
