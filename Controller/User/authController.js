@@ -15,7 +15,7 @@ const generateReferralId = (name) => {
       email,
       address,
       invitationCode,
-      productId // receive from frontend (if referral link is used)
+      productId 
     } = req.body;
   
     try {

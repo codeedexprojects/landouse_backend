@@ -22,4 +22,6 @@ router.delete('/delete/:id',jwtVerify(['admin']), propertyController.deletePrope
 
 router.put('/soldout/:id', jwtVerify(['admin']),propertyController.changeSoldOutStatus);
 
+
+
 module.exports = router;

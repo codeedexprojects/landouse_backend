@@ -1,4 +1,5 @@
 const User = require('../../Models/User/authModel');
+const Property = require('../../Models/Admin/propertyModel');
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
@@ -79,5 +80,48 @@ exports.deleteUserByAdmin = async (req, res) => {
   } catch (err) {
     console.error('Delete user error:', err);
     res.status(500).json({ message: 'Server error while deleting user.' });
+  }
+};
+
+exports.getReferralDetails = async (req, res) => {
+  try {
+    const referredUsers = await User.find({ invitedBy: { $exists: true } })
+      .populate({
+        path: 'invitedBy.userId',
+        select: 'firstName lastName'
+      })
+      .populate({
+        path: 'invitedBy.productId',
+        model: 'Property', // Explicitly specify the model
+        select: 'property_type address' // Use actual field names from your schema
+      })
+      .select('firstName lastName email invitedBy')
+      .lean(); // Convert to plain JavaScript objects
+
+    console.log('Debug - Populated Users:', JSON.stringify(referredUsers, null, 2));
+
+    const result = referredUsers.map(user => {
+      const propertyInfo = user.invitedBy?.productId 
+        ? `${user.invitedBy.productId.property_type} - ${user.invitedBy.productId.address}`
+        : 'N/A';
+
+      return {
+        referredUser: `${user.firstName} ${user.lastName}`,
+        referredEmail: user.email,
+        property: propertyInfo,
+        referralCode: user.invitedBy?.referralCode || 'N/A',
+        referrer: user.invitedBy?.userId
+          ? `${user.invitedBy.userId.firstName} ${user.invitedBy.userId.lastName}`
+          : 'N/A'
+      };
+    });
+
+    res.status(200).json({
+      message: 'Referral details fetched successfully',
+      referrals: result
+    });
+  } catch (err) {
+    console.error('Error fetching referral details:', err);
+    res.status(500).json({ message: 'Server error while fetching referral details.' });
   }
 };
