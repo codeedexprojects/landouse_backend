@@ -56,8 +56,9 @@ exports.getCompareList = async (req, res) => {
 
 // Remove property from compare list
 exports.removeFromCompare = async (req, res) => {
-  const {userId} = req.body;
-  const { propertyId } = req.params;
+  // Use fallback to avoid destructuring error if body is undefined
+  const { propertyId } = req.params;       // get from URL
+  const { userId } = req.query;     
 
   if (!userId || !propertyId) {
     return res.status(400).json({ message: 'userId and propertyId are required.' });
@@ -70,14 +71,20 @@ exports.removeFromCompare = async (req, res) => {
       return res.status(404).json({ message: 'Compare list not found.' });
     }
 
+    // Filter out the property
     compare.properties = compare.properties.filter(
       id => id.toString() !== propertyId
     );
 
     await compare.save();
-    res.status(200).json({ message: 'Property removed from compare list.', compare });
+
+    res.status(200).json({
+      message: 'Property removed from compare list.',
+      compare,
+    });
   } catch (err) {
     console.error('Remove from compare error:', err);
     res.status(500).json({ message: 'Server error while removing property.' });
   }
 };
+

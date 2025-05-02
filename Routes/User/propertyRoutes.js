@@ -9,7 +9,7 @@ const jwtVerify = require('../../Middlewares/jwtMiddleware')
 router.get('/get', propertyController.getAllProperties);
 
 // Optional: get single property
-router.get('/:id',jwtVerify(['user']), propertyController.getPropertyById);
+router.get('/get/:id',jwtVerify(['user']), propertyController.getPropertyById);
 
 
 module.exports = router;

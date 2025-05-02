@@ -37,8 +37,8 @@ exports.getUserFavourites = async (req, res) => {
 
 // Remove from favourites
 exports.removeFromFavourite = async (req, res) => {
-  const {userId} = req.body;
-  const { propertyId } = req.params;
+  const { propertyId } = req.params;       
+  const { userId } = req.query;  
 
   try {
     const result = await Favourite.findOneAndDelete({ userId, propertyId });

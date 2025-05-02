@@ -14,6 +14,7 @@ const vendorRoutes = require('./Routes/Admin/vendorRoutes')
 const userAdminRoutes=require('./Routes/Admin/userRoutes')
 const adminEnquiryRoutes=require('./Routes/Admin/enquiryRoutes')
 const homeLoanAdminRoutes=require('./Routes/Admin/homeLoanRoutes')
+const affiliateRoutes=require('./Routes/Admin/affiliateRoutes')
 
 const vendorAuthRoutes=require('./Routes/Vendor/authRoutes')
 const vendorPropertyRoutes=require('./Routes/Vendor/propertyRoutes')
@@ -25,6 +26,8 @@ const favouriteRoutes=require('./Routes/User/favouriteRoutes')
 const comparisonRoutes=require('./Routes/User/comparisonRoutes')
 const homeLoanRoutes=require('./Routes/User/homeLoanRoutes')
 const userPropertyRoutes=require('./Routes/User/propertyRoutes')
+const contactRoutes=require('./Routes/User/contactRoutes')
+
 
 // admin routes
 app.use('/api/admin/auth',adminAuthRoutes)
@@ -33,6 +36,7 @@ app.use('/api/admin/vendor',vendorRoutes)
 app.use('/api/admin/user',userAdminRoutes)
 app.use('/api/admin/enquiry',adminEnquiryRoutes)
 app.use('/api/admin/homeloan',homeLoanAdminRoutes)
+app.use('/api/admin/affiliate',affiliateRoutes)
 
 // vendor routes 
 app.use('/api/vendor/auth',vendorAuthRoutes)
@@ -46,6 +50,7 @@ app.use('/api/user/favourite',favouriteRoutes)
 app.use('/api/user/compare',comparisonRoutes)
 app.use('/api/user/homeloan',homeLoanRoutes)
 app.use('/api/user/property',userPropertyRoutes)
+app.use('/api/user/contatc',contactRoutes)
 
 
 require('./DB/connection');
