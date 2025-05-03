@@ -57,4 +57,38 @@ const loginAdmin = async (req, res) => {
   }
 };
 
-module.exports = { registerAdmin, loginAdmin };
+const updateAdminProfile = async (req, res) => {
+  try {
+    const adminId = req.admin.id;  // Make sure to get admin id from auth middleware
+    const { name, dob, address, number } = req.body;
+
+    const admin = await Admin.findById(adminId);
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    // Update fields if provided
+    if (name) admin.name = name;
+    if (dob) admin.dob = dob;
+    if (address) admin.address = address;
+    if (number) admin.number = number;
+
+    await admin.save();
+
+    res.json({
+      message: "Admin profile updated successfully",
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        dob: admin.dob,
+        address: admin.address,
+        number: admin.number,
+      },
+    });
+  } catch (error) {
+    console.error("Update admin profile error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+
+module.exports = { registerAdmin, loginAdmin, updateAdminProfile };

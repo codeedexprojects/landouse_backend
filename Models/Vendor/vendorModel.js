@@ -2,7 +2,11 @@ const mongoose = require('mongoose');
 
 const vendorSchema = new mongoose.Schema({
   name: { type: String,  },
-  role: { type: String,  },
+  role: { 
+    type: String, 
+    enum: ['Broker', 'Employee', 'Developer', 'Builder'], 
+    required: true 
+  },
   number: { type: String, required: true, unique: true },
   city: { type: String,  },
   state: { type: String },

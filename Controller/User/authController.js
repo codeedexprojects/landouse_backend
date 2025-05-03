@@ -15,7 +15,7 @@ const generateReferralId = (name) => {
       email,
       address,
       invitationCode,
-      productId 
+      productId
     } = req.body;
   
     try {
@@ -51,18 +51,34 @@ const generateReferralId = (name) => {
         email,
         address,
         referralId,
-        invitedBy // Add referral information
+        invitedBy
       });
   
       await newUser.save();
   
-      res.status(201).json({ message: 'User registered successfully.', user: newUser });
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          userId: newUser._id,
+          role: 'user'
+        },
+        process.env.JWT_SECRET
+      );
+  
+      res.status(201).json({
+        message: 'User registered successfully.',
+        token,
+        userId: newUser._id,
+        referralCode: newUser.referralId,
+        user: newUser
+      });
   
     } catch (err) {
       console.error('Register error:', err);
       res.status(500).json({ message: 'Server error during registration.' });
     }
   };
+  
   
 
 // Login user

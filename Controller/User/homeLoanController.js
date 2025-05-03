@@ -2,30 +2,31 @@ const HomeLoan = require('../../Models/User/homeLoanModel');
 
 // Create loan enquiry
 exports.createLoanEnquiry = async (req, res) => {
-    const { userId, name, number, occupation, typeOfLoan, monthlySalary } = req.body;
-  
-    if (!userId || !name || !number || !occupation || !typeOfLoan || !monthlySalary) {
-      return res.status(400).json({ message: 'All fields are required.' });
-    }
-  
-    try {
-      const enquiry = new HomeLoan({
-        userId,
-        name,
-        number,
-        occupation,
-        typeOfLoan,
-        monthlySalary
-      });
-  
-      await enquiry.save();
-      res.status(201).json({ message: 'Home loan enquiry submitted successfully.', enquiry });
-    } catch (err) {
-      console.error('Create enquiry error:', err);
-      res.status(500).json({ message: 'Server error while submitting enquiry.' });
-    }
-  };
-  
+  const { userId, propertyId, name, number, occupation, typeOfLoan, monthlySalary } = req.body;
+
+  if (!userId || !propertyId || !name || !number || !occupation || !typeOfLoan || !monthlySalary) {
+    return res.status(400).json({ message: 'All fields are required, including propertyId.' });
+  }
+
+  try {
+    const enquiry = new HomeLoan({
+      userId,
+      propertyId,
+      name,
+      number,
+      occupation,
+      typeOfLoan,
+      monthlySalary
+    });
+
+    await enquiry.save();
+    res.status(201).json({ message: 'Home loan enquiry submitted successfully.', enquiry });
+  } catch (err) {
+    console.error('Create enquiry error:', err);
+    res.status(500).json({ message: 'Server error while submitting enquiry.' });
+  }
+};
+
 // Get all enquiries (for admin)
 exports.getAllEnquiries = async (req, res) => {
   try {

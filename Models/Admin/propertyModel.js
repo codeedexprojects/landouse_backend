@@ -11,7 +11,7 @@ const PropertySchema = new mongoose.Schema({
   area: { type: Number, required: true },
   whats_nearby: { type: String },
   buildIn: { type: String },
-  cent: { type: Number },
+  cent: { type: String },
   maxrooms: { type: Number },
   beds: { type: Number },
   baths: { type: Number },

@@ -104,7 +104,7 @@ exports.sendOtpForLogin = async (req, res) => {
   }
 };
 
-// Step 4: Verify OTP & Login Vendor (with role)
+
 exports.verifyLoginOtp = async (req, res) => {
   const { number, otp, role } = req.body;
 
@@ -135,12 +135,14 @@ exports.verifyLoginOtp = async (req, res) => {
 
     delete OTPs[number];
 
-    res.status(200).json({ message: 'Login successful', token });
+    // Respond with the vendor ID along with the token
+    res.status(200).json({ message: 'Login successful', token, vendorId: vendor._id });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Server error during login' });
   }
 };
+
 
 
   

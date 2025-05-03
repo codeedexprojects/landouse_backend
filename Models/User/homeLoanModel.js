@@ -6,6 +6,7 @@ const homeLoanSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Property', required: true },
     name: {
         type: String,
         required: true

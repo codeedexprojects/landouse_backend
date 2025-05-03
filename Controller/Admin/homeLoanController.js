@@ -1,11 +1,14 @@
 const HomeLoan = require('../../Models/User/homeLoanModel');
-
+const Property = require('../../Models/Admin/propertyModel');
 
   
 // Get all enquiries (for admin)
 exports.getAllEnquiries = async (req, res) => {
   try {
-    const enquiries = await HomeLoan.find().sort({ createdAt: -1 });
+    const enquiries = await HomeLoan.find()
+      .populate('propertyId') // ← This pulls in property details
+      .sort({ createdAt: -1 });
+
     res.status(200).json({ enquiries });
   } catch (err) {
     console.error('Get enquiries error:', err);
