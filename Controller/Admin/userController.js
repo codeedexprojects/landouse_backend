@@ -85,20 +85,18 @@ exports.deleteUserByAdmin = async (req, res) => {
 
 exports.getReferralDetails = async (req, res) => {
   try {
-    const referredUsers = await User.find({ invitedBy: { $exists: true } })
+    const referredUsers = await User.find({ 'invitedBy.userId': { $exists: true, $ne: null } })
       .populate({
         path: 'invitedBy.userId',
         select: 'firstName lastName'
       })
       .populate({
         path: 'invitedBy.productId',
-        model: 'Property', // Explicitly specify the model
-        select: 'property_type address' // Use actual field names from your schema
+        model: 'Property', 
+        select: 'property_type address' 
       })
       .select('firstName lastName email invitedBy')
-      .lean(); // Convert to plain JavaScript objects
-
-    console.log('Debug - Populated Users:', JSON.stringify(referredUsers, null, 2));
+      .lean();
 
     const result = referredUsers.map(user => {
       const propertyInfo = user.invitedBy?.productId 

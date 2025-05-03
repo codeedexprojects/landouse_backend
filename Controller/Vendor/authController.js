@@ -129,7 +129,7 @@ exports.verifyLoginOtp = async (req, res) => {
       return res.status(403).json({ message: 'Vendor not approved by admin' });
     }
 
-    const token = jwt.sign({ vendorId: vendor._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ vendorId: vendor._id , role: 'vendor'}, process.env.JWT_SECRET, {
       expiresIn: '1h'
     });
 

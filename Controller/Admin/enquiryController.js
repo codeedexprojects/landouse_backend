@@ -31,3 +31,23 @@ exports.deleteEnquiry = async (req, res) => {
     res.status(500).json({ message: 'Server error while deleting enquiry.' });
   }
 };
+
+
+exports.getEnquiriesByProductId = async (req, res) => {
+  const { productId } = req.params;
+
+  try {
+    const enquiries = await Enquiry.find({ propertyId: productId })
+      .populate('userId', 'firstName lastName phoneNumber email') // user info
+      .populate('propertyId', 'title address'); // product info
+
+    if (!enquiries || enquiries.length === 0) {
+      return res.status(404).json({ message: 'No enquiries found for this product.' });
+    }
+
+    res.status(200).json({ enquiries });
+  } catch (err) {
+    console.error('Error fetching enquiries for product:', err);
+    res.status(500).json({ message: 'Server error while fetching enquiries.' });
+  }
+};
