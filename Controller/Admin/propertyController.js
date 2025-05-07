@@ -3,7 +3,7 @@ const Property = require('../../Models/Admin/propertyModel');
 exports.addProperty = async (req, res) => {
   try {
     const {
-      property_type, property_price, area, whats_nearby,
+      user_id,property_type, property_price, area, whats_nearby,
       buildIn, cent, maxrooms, beds, baths,
       description, address, zipcode, locationmark,
       coordinates, private_note
@@ -31,7 +31,8 @@ exports.addProperty = async (req, res) => {
       },
       photos,
       private_note,
-      created_by: req.user._id // Make sure user is populated from auth middleware
+      created_by: user_id, 
+       created_by_model: 'Admin'
     });
 
     await newProperty.save();

@@ -1,93 +1,104 @@
-const Affiliate = require('../../Models/Admin/affiliateModel');
+const Affiliate = require('../../Models/Affiliate/authModel');
+const User = require('../../Models/User/authModel'); 
 
-// Generate Referral Id
-const generateReferralId = (name) => {
+const generateReferralId = (name = '') => {
   const randomString = Math.random().toString(36).substring(2, 7).toUpperCase();
   return `${name.slice(0, 3).toUpperCase()}-${randomString}`;
 };
 
-// Add new affiliate
-exports.createAffiliate = async (req, res) => {
+
+exports.adminAddAffiliate = async (req, res) => {
+  const { name, number, role } = req.body;
+  if (!name || !number || !role) {
+    return res.status(400).json({ message: 'Name, number, and role are required' });
+  }
+  
   try {
-    const { name, role, number, affiliateAmount } = req.body;
-
-    if (!name || !role || !number) {
-      return res.status(400).json({ message: 'Name, role, and number are required' });
-    }
-
-    const referralCode = generateReferralId(name);
-
-    const newAffiliate = new Affiliate({
+    const referralId = generateReferralId(name);
+    const affiliate = new Affiliate({
       name,
-      role,
       number,
-      referralCode,
-      affiliateAmount: affiliateAmount || 0  // default to 0 if not provided
+      role,
+      isApproved: true,
+      referralId
     });
-
-    await newAffiliate.save();
-
-    res.status(201).json({ message: 'Affiliate created successfully', affiliate: newAffiliate });
-  } catch (error) {
-    console.error('Error creating affiliate:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Get all affiliates
-exports.getAllAffiliates = async (req, res) => {
-  try {
-    const affiliates = await Affiliate.find().sort({ createdAt: -1 });
-    res.status(200).json(affiliates);
-  } catch (error) {
-    console.error('Error fetching affiliates:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Update affiliate amount
-exports.updateAffiliateAmount = async (req, res) => {
-  try {
-    const { affiliateId } = req.params;
-    const { affiliateAmount } = req.body;
-
-    if (!affiliateAmount) {
-      return res.status(400).json({ message: 'Affiliate amount is required' });
-    }
-
-    const affiliate = await Affiliate.findById(affiliateId);
-
-    if (!affiliate) {
-      return res.status(404).json({ message: 'Affiliate not found' });
-    }
-
-    affiliate.affiliateAmount = affiliateAmount;
-
     await affiliate.save();
 
-    res.status(200).json({ message: 'Affiliate amount updated successfully', affiliate });
-  } catch (error) {
-    console.error('Error updating affiliate amount:', error);
+    res.json({ message: 'Affiliate added and approved', affiliate });
+  } catch (err) {
+    console.error('Error in adminAddAffiliate:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+
+exports.approveAffiliate = async (req, res) => {
+  try {
+    const affiliate = await Affiliate.findById(req.params.id);
+    if (!affiliate) return res.status(400).json({ message: 'Affiliate not found' });
+
+    affiliate.isApproved = true;
+    await affiliate.save();
+
+    res.json({ message: 'Affiliate approved' });
+  } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Delete affiliate
-exports.deleteAffiliate = async (req, res) => {
+
+exports.getAffiliates = async (req, res) => {
   try {
-    const { affiliateId } = req.params;
+    const affiliates = await Affiliate.find().sort({ createdAt: -1 }); // latest first
 
-    const affiliate = await Affiliate.findById(affiliateId);
+    const affiliatesWithCounts = await Promise.all(
+      affiliates.map(async (affiliate) => {
+        const userCount = await User.countDocuments({ 'invitedBy.referralCode': affiliate.referralId });
+        return {
+          ...affiliate.toObject(),
+          userCount
+        };
+      })
+    );
 
+    res.json({ affiliates: affiliatesWithCounts });
+  } catch (err) {
+    console.error('Error in getAffiliates:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.updateAffiliateAmount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount } = req.body;
+
+    if (amount === undefined) {
+      return res.status(400).json({ message: 'Amount is required' });
+    }
+
+    const affiliate = await Affiliate.findById(id);
     if (!affiliate) {
       return res.status(404).json({ message: 'Affiliate not found' });
     }
 
-    await affiliate.remove();
+    affiliate.amount = amount;
+    await affiliate.save();
 
-    res.status(200).json({ message: 'Affiliate deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting affiliate:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.json({ message: 'Affiliate amount updated', affiliate });
+  } catch (err) {
+    console.error('Error in updateAffiliateAmount:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.getApprovalRequests = async (req, res) => {
+  try {
+    const approvalRequests = await Affiliate.find({ isApproved: false }).sort({ createdAt: -1 });
+
+    res.json({ approvalRequests });
+  } catch (err) {
+    console.error('Error in getApprovalRequests:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };

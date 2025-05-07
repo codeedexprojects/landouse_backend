@@ -1,5 +1,6 @@
 const User = require('../../Models/User/authModel');
 const jwt = require('jsonwebtoken');
+const Affiliate = require('../../Models/Affiliate/authModel');
 
 // Register a new user
 const generateReferralId = (name) => {
@@ -7,6 +8,8 @@ const generateReferralId = (name) => {
     return `${name.slice(0, 3).toUpperCase()}-${randomString}`;
   };
   
+  
+
   exports.registerUser = async (req, res) => {
     const {
       firstName,
@@ -20,19 +23,15 @@ const generateReferralId = (name) => {
   
     try {
       const existingUser = await User.findOne({ phoneNumber });
-  
       if (existingUser) {
         return res.status(400).json({ message: 'User already registered with this phone number.' });
       }
   
-      // Generate unique referral ID for the new user
       const referralId = generateReferralId(firstName);
-  
-      // Initialize invitedBy (null by default)
       let invitedBy = null;
   
-      // If invitationCode is provided, find inviter
       if (invitationCode) {
+        // Check if referral code is from User
         const inviter = await User.findOne({ referralId: invitationCode });
   
         if (inviter) {
@@ -41,6 +40,15 @@ const generateReferralId = (name) => {
             referralCode: invitationCode,
             productId: productId || null,
           };
+        } else {
+          // Check if referral code is from Affiliate
+          const affiliate = await Affiliate.findOne({ referralId: invitationCode });
+          if (affiliate) {
+            invitedBy = {
+              referralCode: invitationCode,
+              productId: productId || null,
+            };
+          }
         }
       }
   
@@ -56,7 +64,6 @@ const generateReferralId = (name) => {
   
       await newUser.save();
   
-      // Generate JWT token
       const token = jwt.sign(
         {
           userId: newUser._id,
@@ -78,6 +85,7 @@ const generateReferralId = (name) => {
       res.status(500).json({ message: 'Server error during registration.' });
     }
   };
+  
   
   
 

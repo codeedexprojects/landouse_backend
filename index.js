@@ -19,6 +19,7 @@ const overviewRoutes=require('./Routes/Admin/overviewRoutes')
 
 const vendorAuthRoutes=require('./Routes/Vendor/authRoutes')
 const vendorPropertyRoutes=require('./Routes/Vendor/propertyRoutes')
+const vendorEnquiryRoutes=require('./Routes/Vendor/enquiryRoutes')
 
 const userAuthRoutes=require('./Routes/User/authRoutes')
 const enquiryRoutes=require('./Routes/User/enquiryRoutes')
@@ -28,6 +29,8 @@ const comparisonRoutes=require('./Routes/User/comparisonRoutes')
 const homeLoanRoutes=require('./Routes/User/homeLoanRoutes')
 const userPropertyRoutes=require('./Routes/User/propertyRoutes')
 const contactRoutes=require('./Routes/User/contactRoutes')
+
+const affiliateAuthRoutes=require('./Routes/Affiliate/authRoutes')
 
 
 // admin routes
@@ -43,6 +46,7 @@ app.use('/api/admin/overview',overviewRoutes)
 // vendor routes 
 app.use('/api/vendor/auth',vendorAuthRoutes)
 app.use('/api/vendor/property',vendorPropertyRoutes)
+app.use('/api/vendor/enquiry',vendorEnquiryRoutes)
 
 // user routes
 app.use('/api/user/auth',userAuthRoutes)
@@ -52,7 +56,10 @@ app.use('/api/user/favourite',favouriteRoutes)
 app.use('/api/user/compare',comparisonRoutes)
 app.use('/api/user/homeloan',homeLoanRoutes)
 app.use('/api/user/property',userPropertyRoutes)
-app.use('/api/user/contatc',contactRoutes)
+app.use('/api/user/contact',contactRoutes)
+
+// affiliate routes
+app.use('/api/affiliate/auth',affiliateAuthRoutes)
 
 
 require('./DB/connection');

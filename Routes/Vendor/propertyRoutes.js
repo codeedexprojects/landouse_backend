@@ -6,20 +6,23 @@ const jwtVerify = require('../../Middlewares/jwtMiddleware')
 
 
 // Admin or Vendor can add a property
-router.post('/add', upload.array('photos', 10), propertyController.addProperty);
+router.post('/add', upload.array('photos', 10),jwtVerify(['vendor']), propertyController.addProperty);
 
 // Get all properties (for admin/vendor dashboard view)
-router.get('/get',  propertyController.getAllProperties);
+router.get('/get',jwtVerify(['vendor']),  propertyController.getAllProperties);
 
 // Optional: get single property
-router.get('/:id',propertyController.getPropertyById);
+router.get('/:id',jwtVerify(['vendor']), propertyController.getPropertyById);
 
 // Update property
-router.patch('/update/:id', upload.array('photos', 10), propertyController.updateProperty);
+router.patch('/update/:id',jwtVerify(['vendor']),  upload.array('photos', 10), propertyController.updateProperty);
 
 // Delete property
-router.delete('/delete/:id', propertyController.deleteProperty);
+router.delete('/delete/:id',jwtVerify(['vendor']),  propertyController.deleteProperty);
 
-router.put('/property/soldout/:id', propertyController.changeSoldOutStatus);
+router.put('/soldout/:id',jwtVerify(['vendor']), propertyController.changeSoldOutStatus);
+
+router.get('/counts/:vendorId', propertyController.getPropertyCounts);
+
 
 module.exports = router;

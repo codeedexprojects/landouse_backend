@@ -33,15 +33,6 @@ const loginAdmin = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     // Generate JWT
-    //  const token = jwt.sign(
-    //       {
-    //         id: admin._id,
-    //         email: admin.email,
-    //         role: 'admin'  
-    //       },
-    //       process.env.JWT_SECRET,
-    //       { expiresIn: "7d" }
-    //     );
     const token = jwt.sign(
       {
         id: admin._id,
@@ -59,19 +50,28 @@ const loginAdmin = async (req, res) => {
 
 const updateAdminProfile = async (req, res) => {
   try {
-    const adminId = req.admin.id;  // Make sure to get admin id from auth middleware
+    const adminId = req.params.id;
     const { name, dob, address, number } = req.body;
+    let profileImage;
+
+    // Check if file was uploaded (requires multer)
+    if (req.file) {
+      profileImage = req.file.path;
+    }
 
     const admin = await Admin.findById(adminId);
     if (!admin) return res.status(404).json({ message: "Admin not found" });
 
-    // Update fields if provided
     if (name) admin.name = name;
     if (dob) admin.dob = dob;
     if (address) admin.address = address;
     if (number) admin.number = number;
+    if (profileImage) admin.profileImage = profileImage;
 
     await admin.save();
+
+    // Format DOB for response
+    const formattedDob = admin.dob ? admin.dob.toISOString().split('T')[0] : null;
 
     res.json({
       message: "Admin profile updated successfully",
@@ -79,9 +79,10 @@ const updateAdminProfile = async (req, res) => {
         id: admin._id,
         name: admin.name,
         email: admin.email,
-        dob: admin.dob,
+        dob: formattedDob,   
         address: admin.address,
         number: admin.number,
+        profileImage: admin.profileImage,
       },
     });
   } catch (error) {
@@ -91,4 +92,34 @@ const updateAdminProfile = async (req, res) => {
 };
 
 
-module.exports = { registerAdmin, loginAdmin, updateAdminProfile };
+
+const getAdminProfile = async (req, res) => {
+  try {
+    const adminId = req.params.id;
+
+    const admin = await Admin.findById(adminId);
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    // Format DOB for response
+    const formattedDob = admin.dob ? admin.dob.toISOString().split('T')[0] : null;
+
+    res.json({
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        dob: formattedDob, // ✅ formatted YYYY-MM-DD
+        address: admin.address,
+        number: admin.number,
+        profileImage: admin.profileImage, // ✅ include image
+      },
+    });
+  } catch (error) {
+    console.error("Get admin profile error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+
+
+module.exports = { registerAdmin, loginAdmin, updateAdminProfile, getAdminProfile };

@@ -18,15 +18,24 @@ const PropertySchema = new mongoose.Schema({
   description: { type: String },
   address: { type: String, required: true },
   zipcode: { type: String },
-  locationmark: { type: String }, // Google map link or location
+  locationmark: { type: String }, 
   coordinates: {
     latitude: { type: Number },
     longitude: { type: Number }
   },
-  photos: [{ type: String }], // store image URLs or file paths
+  photos: [{ type: String }], 
   soldOut: { type: Boolean, default: false },
   private_note: PrivateNoteSchema,
-  created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // who added (admin or vendor)
+  created_by: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    refPath: 'created_by_model' 
+  },
+  created_by_model: {
+    type: String,
+    // required: true,
+    enum: ['Admin', 'Vendor'] 
+  },
   created_at: { type: Date, default: Date.now }
 });
 

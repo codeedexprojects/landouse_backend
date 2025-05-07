@@ -2,17 +2,13 @@ const express = require('express');
 const router = express.Router();
 const affiliateController = require('../../Controller/Admin/affiliateController');
 
-// Create new affiliate
-router.post('/create', affiliateController.createAffiliate);
 
-// Get all affiliates
-router.get('/', affiliateController.getAllAffiliates);
+router.patch('/approve/:id', affiliateController.approveAffiliate);
+router.post('/add', affiliateController.adminAddAffiliate);
+router.get('/get', affiliateController.getAffiliates);
+router.patch('/update/:id', affiliateController.updateAffiliateAmount);
+router.get('/requests', affiliateController.getApprovalRequests);
 
-// Update affiliate amount
-router.put('/update/:affiliateId', affiliateController.updateAffiliateAmount);
-
-// Delete affiliate
-router.delete('/delete/:affiliateId', affiliateController.deleteAffiliate);
 
 module.exports = router;
  

@@ -1,5 +1,6 @@
 const User = require('../../Models/User/authModel');
 const Property = require('../../Models/Admin/propertyModel');
+const Enquiry=require('../../Models/User/EnquiryModel')
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
@@ -12,7 +13,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Get single user by ID
+// Get single user by ID with referral list and latest enquiry
 exports.getSingleUser = async (req, res) => {
   const { id } = req.params;
 
@@ -23,12 +24,43 @@ exports.getSingleUser = async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    res.status(200).json({ message: 'User fetched successfully', user });
+    // 1️⃣ Fetch referred users
+    const referredUsers = await User.find({ 'invitedBy.userId': id })
+      .select('firstName lastName email invitedBy')
+      .populate({
+        path: 'invitedBy.productId',
+        model: 'Property',
+        select: 'property_type address'
+      });
+
+    const referredUsersFormatted = referredUsers.map(refUser => ({
+      id: refUser._id,
+      name: `${refUser.firstName} ${refUser.lastName}`,
+      email: refUser.email,
+      referralCode: refUser.invitedBy?.referralCode || '',
+      property: refUser.invitedBy?.productId
+        ? `${refUser.invitedBy.productId.property_type} - ${refUser.invitedBy.productId.address}`
+        : 'N/A'
+    }));
+
+    const latestEnquiry = await Enquiry.findOne({ userId: id })
+    .sort({ createdAt: -1 })
+    .populate('propertyId'); // 🟢 no select fields = fetch all
+  
+
+
+    res.status(200).json({
+      message: 'User fetched successfully',
+      user,
+      referredUsers: referredUsersFormatted,
+      latestEnquiry
+    });
   } catch (err) {
     console.error('Get single user error:', err);
     res.status(500).json({ message: 'Server error while fetching user.' });
   }
 };
+
 
 // Update a user by ID
 exports.updateUserByAdmin = async (req, res) => {

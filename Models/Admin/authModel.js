@@ -8,7 +8,9 @@ const adminSchema = new mongoose.Schema(
     password: { type: String, required: true },
     dob: { type: Date },           
     address: { type: String },     
-    number: { type: String },       
+    number: { type: String },   
+    profileImage: { type: String }, 
+        
   },
   { timestamps: true }
 );

@@ -130,7 +130,7 @@ exports.verifyLoginOtp = async (req, res) => {
     }
 
     const token = jwt.sign({ vendorId: vendor._id , role: 'vendor'}, process.env.JWT_SECRET, {
-      expiresIn: '1h'
+     
     });
 
     delete OTPs[number];
@@ -183,5 +183,23 @@ exports.updateProfile = async (req, res) => {
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Server error' });
+    }
+  };
+
+
+  exports.getProfile = async (req, res) => {
+    const { vendorId } = req.params;
+  
+    try {
+      const vendor = await Vendor.findById(vendorId).select('-__v -password'); // exclude unwanted fields
+  
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+  
+      res.status(200).json({ success: true, vendor });
+    } catch (err) {
+      console.error('Get Profile error:', err);
+      res.status(500).json({ message: 'Server error while fetching profile' });
     }
   };

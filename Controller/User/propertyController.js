@@ -13,15 +13,22 @@ exports.getAllProperties = async (req, res) => {
 
 exports.getPropertyById = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const property = await Property.findById(req.params.id)
+      .populate({
+        path: 'created_by', // the field to populate
+        select: 'name email number ' // select the fields you want
+      });
+
     if (!property) {
       return res.status(404).json({ success: false, message: 'Property not found' });
     }
+
     res.status(200).json({ success: true, property });
   } catch (error) {
     console.error('Error fetching property:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch property' });
   }
 };
+
 
 
