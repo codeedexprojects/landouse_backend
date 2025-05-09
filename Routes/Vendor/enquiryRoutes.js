@@ -13,5 +13,10 @@ router.delete('/:vendorId/enquiries/:id', enquiryController.deleteEnquiry);
 
 router.get('/:vendorId/enquiry-stats', enquiryController.getEnquiryStatsForVendor);
 
+router.get('/:vendorId/counts', enquiryController.getEnquiryCountsForVendor);
+
+router.patch('/:enquiryId/mark-read', enquiryController.markEnquiryAsRead);
+
+
 
 module.exports = router;

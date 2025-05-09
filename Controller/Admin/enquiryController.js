@@ -51,3 +51,34 @@ exports.getEnquiriesByProductId = async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching enquiries.' });
   }
 };
+
+exports.getUnreadEnquiryCount = async (req, res) => {
+  try {
+    const unreadCount = await Enquiry.countDocuments({ isRead: false });
+    res.status(200).json({ unreadCount });
+  } catch (err) {
+    console.error('Error fetching unread enquiry count:', err);
+    res.status(500).json({ message: 'Server error while fetching unread enquiry count.' });
+  }
+};
+
+exports.markEnquiryAsRead = async (req, res) => {
+  const { enquiryId } = req.params;
+
+  try {
+    const enquiry = await Enquiry.findByIdAndUpdate(
+      enquiryId,
+      { isRead: true },
+      { new: true }
+    );
+
+    if (!enquiry) {
+      return res.status(404).json({ message: 'Enquiry not found.' });
+    }
+
+    res.status(200).json({ message: 'Enquiry marked as read.', enquiry });
+  } catch (err) {
+    console.error('Error marking enquiry as read:', err);
+    res.status(500).json({ message: 'Server error while marking enquiry as read.' });
+  }
+};

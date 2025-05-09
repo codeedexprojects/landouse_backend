@@ -146,3 +146,52 @@ exports.getEnquiryStatsForVendor = async (req, res) => {
       res.status(500).json({ success: false, message: 'Failed to fetch enquiry stats' });
     }
   };
+
+  // Get enquiry counts for a vendor
+exports.getEnquiryCountsForVendor = async (req, res) => {
+  try {
+    const vendorId = req.params.vendorId;
+
+    // Get vendor's property IDs
+    const vendorProperties = await Property.find({ created_by: vendorId }, '_id');
+    const propertyIds = vendorProperties.map(p => p._id);
+
+    // Get counts
+    const totalEnquiries = await Enquiry.countDocuments({ propertyId: { $in: propertyIds } });
+    const unreadEnquiries = await Enquiry.countDocuments({ propertyId: { $in: propertyIds }, isRead: false });
+    const readEnquiries = await Enquiry.countDocuments({ propertyId: { $in: propertyIds }, isRead: true });
+
+    res.status(200).json({
+      success: true,
+      totalEnquiries,
+      readEnquiries,
+      unreadEnquiries
+    });
+  } catch (error) {
+    console.error('Error fetching enquiry counts:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch enquiry counts' });
+  }
+};
+
+
+exports.markEnquiryAsRead = async (req, res) => {
+  const { enquiryId } = req.params;
+
+  try {
+    const enquiry = await Enquiry.findByIdAndUpdate(
+      enquiryId,
+      { isRead: true },
+      { new: true }
+    );
+
+    if (!enquiry) {
+      return res.status(404).json({ message: 'Enquiry not found.' });
+    }
+
+    res.status(200).json({ message: 'Enquiry marked as read.', enquiry });
+  } catch (err) {
+    console.error('Error marking enquiry as read:', err);
+    res.status(500).json({ message: 'Server error while marking enquiry as read.' });
+  }
+};
+
