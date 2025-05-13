@@ -9,7 +9,6 @@ const generateReferralId = (name) => {
   };
   
   
-
   exports.registerUser = async (req, res) => {
     const {
       firstName,

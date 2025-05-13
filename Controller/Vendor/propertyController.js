@@ -1,40 +1,63 @@
 const Property = require('../../Models/Admin/propertyModel');
 
 exports.addProperty = async (req, res) => {
-  try {
-    const {
-      user_id,
-      property_type, property_price, area, whats_nearby,
-      buildIn, cent, maxrooms, beds, baths,
-      description, address, zipcode, locationmark,
-      coordinates, private_note
-    } = req.body;
-
-    const photos = req.files ? req.files.map(file => file.path) : [];
-
-    const newProperty = new Property({
-      property_type,
-      property_price,
-      area,
-      whats_nearby,
-      buildIn,
-      cent,
-      maxrooms,
-      beds,
-      baths,
-      description,
-      address,
-      zipcode,
-      locationmark,
-      coordinates: {
-        latitude: coordinates?.latitude,
-        longitude: coordinates?.longitude
-      },
-      photos,
-      private_note,
-      created_by: user_id, 
-      created_by_model: 'Vendor'
-    });
+ try {
+     const {
+       user_id,
+       property_type,
+       property_price,
+       price_per_cent,
+       area,
+       buildIn,
+       carpet_area,
+       car_parking,
+       car_access,
+       floor,
+       road_frontage,
+       whats_nearby,
+       cent,
+       maxrooms,
+       beds,
+       baths,
+       description,
+       address,
+       zipcode,
+       locationmark,
+       coordinates,
+       private_note
+     } = req.body;
+ 
+     const photos = req.files ? req.files.map(file => file.path) : [];
+ 
+     const newProperty = new Property({
+       property_type,
+       property_price,
+       price_per_cent,
+       area,
+       buildIn,
+       carpet_area,
+       car_parking,
+       car_access,
+       floor,
+       road_frontage,
+       whats_nearby,
+       cent,
+       maxrooms,
+       beds,
+       baths,
+       description,
+       address,
+       zipcode,
+       locationmark,
+       coordinates: {
+         latitude: coordinates?.latitude,
+         longitude: coordinates?.longitude
+       },
+       photos,
+       private_note,
+       created_by: user_id,
+       created_by_model: 'Admin'
+     });
 
     await newProperty.save();
 
