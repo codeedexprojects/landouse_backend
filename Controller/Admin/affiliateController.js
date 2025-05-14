@@ -102,3 +102,25 @@ exports.getApprovalRequests = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+exports.getReferredUsers = async (req, res) => {
+  try {
+    const affiliateId = req.params.id; // or get from req.user if using token
+
+    const affiliate = await Affiliate.findById(affiliateId);
+    if (!affiliate) return res.status(404).json({ message: 'Affiliate not found' });
+
+    // Find users who signed up using this affiliate's referralId
+    const referredUsers = await User.find({ 
+      'invitedBy.referralCode': affiliate.referralId 
+    }).select('-otp'); // optional: exclude fields like otp if exists
+
+    res.status(200).json({
+      message: `Users referred by affiliate ${affiliate.name}`,
+      referredUsers
+    });
+  } catch (err) {
+    console.error('Error fetching referred users:', err);
+    res.status(500).json({ message: 'Server error while fetching referred users' });
+  }
+};

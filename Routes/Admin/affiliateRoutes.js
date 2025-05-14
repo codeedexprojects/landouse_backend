@@ -8,6 +8,8 @@ router.post('/add', affiliateController.adminAddAffiliate);
 router.get('/get', affiliateController.getAffiliates);
 router.patch('/update/:id', affiliateController.updateAffiliateAmount);
 router.get('/requests', affiliateController.getApprovalRequests);
+router.get('/recent-users/:id', affiliateController.getReferredUsers )
+
 
 
 module.exports = router;
