@@ -28,6 +28,13 @@ exports.addProperty = async (req, res) => {
      } = req.body;
  
      const photos = req.files ? req.files.map(file => file.path) : [];
+
+       // Generate product code
+    const generateProductCode = (type) => {
+      const randomString = Math.random().toString(36).substring(2, 7).toUpperCase();
+      return `${(type || 'PRO').slice(0, 3).toUpperCase()}${randomString}`;
+    };
+    const productCode = generateProductCode(property_type);
  
      const newProperty = new Property({
        property_type,
@@ -49,6 +56,7 @@ exports.addProperty = async (req, res) => {
        address,
        zipcode,
        locationmark,
+       productCode,
        coordinates: {
          latitude: coordinates?.latitude,
          longitude: coordinates?.longitude

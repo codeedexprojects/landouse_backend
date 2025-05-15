@@ -32,7 +32,7 @@ exports.addProperty = async (req, res) => {
     // Generate product code
     const generateProductCode = (type) => {
       const randomString = Math.random().toString(36).substring(2, 7).toUpperCase();
-      return `${(type || 'PRO').slice(0, 3).toUpperCase()}-${randomString}`;
+      return `${(type || 'PRO').slice(0, 3).toUpperCase()}${randomString}`;
     };
     const productCode = generateProductCode(property_type);
 
