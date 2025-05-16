@@ -1,8 +1,28 @@
 const Affiliate = require('../../Models/Affiliate/authModel');
 const jwt = require("jsonwebtoken");
-const User=require('../../Models/User/authModel')
+const User = require('../../Models/User/authModel');
 const moment = require('moment');
+const axios = require('axios');
 
+// 2Factor OTP Configuration
+const TWO_FACTOR_API_KEY = process.env.TWO_FACTOR_API_KEY; // Add this to your environment variables
+const TWO_FACTOR_TEMPLATE_NAME = 'YourTemplateName'; // Set your template name
+
+// Function to generate a random 6-digit OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Function to send OTP via 2Factor API
+const send2FactorOTP = async (number, otp) => {
+  try {
+    const response = await axios.get('https://2factor.in/API/V1/' + TWO_FACTOR_API_KEY + '/SMS/' + number + '/' + otp + '/' + TWO_FACTOR_TEMPLATE_NAME);
+    return response.data;
+  } catch (error) {
+    console.error('2Factor API Error:', error);
+    throw new Error('Failed to send OTP via 2Factor');
+  }
+};
 
 // Generate referral ID
 const generateReferralId = (name) => {
@@ -10,22 +30,33 @@ const generateReferralId = (name) => {
   return `${name.slice(0, 3).toUpperCase()}-${randomString}`;
 };
 
-
 exports.registerAffiliate = async (req, res) => {
   const { name, number, role } = req.body;
   try {
     let affiliate = await Affiliate.findOne({ number });
     if (affiliate) return res.status(400).json({ message: 'Number already registered' });
 
-    const otp = '123456';  // hardcoded OTP
+    // Generate a random 6-digit OTP
+    const otp = generateOTP();
     const referralId = generateReferralId(name);
 
-    affiliate = new Affiliate({ name, number, role, otp, referralId });
+    // Create the affiliate with OTP
+    affiliate = new Affiliate({ 
+      name, 
+      number, 
+      role, 
+      otp, 
+      referralId,
+      otpExpiry: Date.now() + 10 * 60 * 1000 // OTP expires in 10 minutes
+    });
     await affiliate.save();
 
-    console.log(`Register OTP for ${number}: ${otp}`);
+    // Send OTP using 2Factor API
+    await send2FactorOTP(number, otp);
+
     res.json({ message: 'OTP sent. Please verify to complete registration' });
   } catch (err) {
+    console.error('Register affiliate error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -35,19 +66,25 @@ exports.verifyOtp = async (req, res) => {
   try {
     const affiliate = await Affiliate.findOne({ number });
     if (!affiliate) return res.status(400).json({ message: 'Affiliate not found' });
+    
+    // Check if OTP has expired
+    if (affiliate.otpExpiry && affiliate.otpExpiry < Date.now()) {
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    }
 
     if (affiliate.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
 
+    // Clear OTP and expiry after successful verification
     affiliate.otp = null;
+    affiliate.otpExpiry = null;
     await affiliate.save();
 
     res.json({ message: 'OTP verified. Waiting for admin approval' });
   } catch (err) {
+    console.error('Verify OTP error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
-
-// --------------------- LOGIN FLOW ---------------------
 
 exports.requestLoginOtp = async (req, res) => {
   const { number } = req.body;
@@ -55,13 +92,20 @@ exports.requestLoginOtp = async (req, res) => {
     const affiliate = await Affiliate.findOne({ number });
     if (!affiliate) return res.status(400).json({ message: 'Affiliate not found' });
 
-    const otp = '123456';  // hardcoded OTP
+    // Generate a random 6-digit OTP
+    const otp = generateOTP();
+    
+    // Update the affiliate with new OTP and expiry
     affiliate.otp = otp;
+    affiliate.otpExpiry = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
     await affiliate.save();
 
-    console.log(`Login OTP for ${number}: ${otp}`);
+    // Send OTP using 2Factor API
+    await send2FactorOTP(number, otp);
+
     res.json({ message: 'Login OTP sent. Please check your phone.' });
   } catch (err) {
+    console.error('Request login OTP error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -74,40 +118,46 @@ exports.verifyLoginOtp = async (req, res) => {
 
     if (!affiliate.isApproved) return res.status(403).json({ message: 'Admin has not approved this affiliate yet' });
 
+    // Check if OTP has expired
+    if (affiliate.otpExpiry && affiliate.otpExpiry < Date.now()) {
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    }
+
     if (affiliate.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
 
+    // Clear OTP and expiry after successful verification
     affiliate.otp = null;
+    affiliate.otpExpiry = null;
     await affiliate.save();
+    
     const token = jwt.sign(
-        { id: affiliate._id, number: affiliate.number, role: affiliate.role },
-        process.env.JWT_SECRET , 
-       
-      );
-  
+      { id: affiliate._id, number: affiliate.number, role: affiliate.role },
+      process.env.JWT_SECRET
+    );
 
-      res.json({
-        message: 'Login successful',
-        token,
-        affiliate: {
-          id: affiliate._id,
-          name: affiliate.name,
-          number: affiliate.number,
-          referralId: affiliate.referralId,
-          amount: affiliate.amount,
-          isApproved: affiliate.isApproved,
-        },
-      });
+    res.json({
+      message: 'Login successful',
+      token,
+      affiliate: {
+        id: affiliate._id,
+        name: affiliate.name,
+        number: affiliate.number,
+        referralId: affiliate.referralId,
+        amount: affiliate.amount,
+        isApproved: affiliate.isApproved,
+      },
+    });
   } catch (err) {
+    console.error('Verify login OTP error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
-
 
 exports.getAffiliateProfile = async (req, res) => {
   try {
     const { id } = req.params; 
 
-    const affiliate = await Affiliate.findById(id).select('-otp'); // exclude otp if needed
+    const affiliate = await Affiliate.findById(id).select('-otp -otpExpiry'); // exclude sensitive fields
 
     if (!affiliate) {
       return res.status(404).json({ message: 'Affiliate not found' });
@@ -120,7 +170,6 @@ exports.getAffiliateProfile = async (req, res) => {
   }
 };
 
-
 exports.getReferredUsers = async (req, res) => {
   try {
     const affiliateId = req.params.id; // or get from req.user if using token
@@ -131,7 +180,7 @@ exports.getReferredUsers = async (req, res) => {
     // Find users who signed up using this affiliate's referralId
     const referredUsers = await User.find({ 
       'invitedBy.referralCode': affiliate.referralId 
-    }).select('-otp'); // optional: exclude fields like otp if exists
+    }).select('-otp -otpExpiry'); // exclude sensitive fields
 
     res.status(200).json({
       message: `Users referred by affiliate ${affiliate.name}`,
@@ -142,7 +191,6 @@ exports.getReferredUsers = async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching referred users' });
   }
 };
-
 
 exports.getReferredUsersWithStats = async (req, res) => {
   try {

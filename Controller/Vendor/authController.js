@@ -1,19 +1,39 @@
 const Vendor = require('../../Models/Vendor/vendorModel');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const OTPs = {};
-const sendOtp = require('../../utils/sendOTP');
+
+// 2Factor OTP Configuration
+const TWO_FACTOR_API_KEY = process.env.TWO_FACTOR_API_KEY; // Add this to your environment variables
+const TWO_FACTOR_TEMPLATE_NAME = 'YourTemplateName'; // Set your template name
+
+// Function to generate a random 6-digit OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Function to send OTP via 2Factor API
+const send2FactorOTP = async (number, otp) => {
+  try {
+    const response = await axios.get('https://2factor.in/API/V1/' + TWO_FACTOR_API_KEY + '/SMS/' + number + '/' + otp + '/' + TWO_FACTOR_TEMPLATE_NAME);
+    return response.data;
+  } catch (error) {
+    console.error('2Factor API Error:', error);
+    throw new Error('Failed to send OTP via 2Factor');
+  }
+};
 
 // Step 1: Send OTP for Registration
 exports.sendOtpForRegistration = async (req, res) => {
   const { name, role, number, city, state, postCode, email, aboutVendor } = req.body;
-
   if (!name || !role || !number) {
     return res.status(400).json({ message: 'Name, role, and number are required.' });
   }
-
   try {
-    const otp = '123456'; // Use random in production
-
+    // Generate a random 6-digit OTP
+    const otp = generateOTP();
+    
+    // Store OTP and user details for verification
     OTPs[number] = {
       otp,
       name,
@@ -23,10 +43,12 @@ exports.sendOtpForRegistration = async (req, res) => {
       postCode,
       email,
       aboutVendor,
-      type: 'registration'
+      type: 'registration',
+      expiresAt: Date.now() + 10 * 60 * 1000 // OTP expires in 10 minutes
     };
 
-    await sendOtp(number, otp);
+    // Send OTP using 2Factor API
+    await send2FactorOTP(number, otp);
 
     res.status(200).json({ message: `OTP sent to ${number}` });
   } catch (err) {
@@ -42,7 +64,7 @@ exports.verifyRegistrationOtp = async (req, res) => {
   try {
     const data = OTPs[number];
 
-    if (!data || data.otp !== otp || data.type !== 'registration') {
+    if (!data || data.otp !== otp || data.type !== 'registration' || Date.now() > data.expiresAt) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
@@ -91,11 +113,19 @@ exports.sendOtpForLogin = async (req, res) => {
       return res.status(404).json({ message: 'Vendor not found. Please register.' });
     }
 
-    const otp = '123456'; // Use random OTP in production
+    // Generate a random 6-digit OTP
+    const otp = generateOTP();
 
-    OTPs[number] = { otp, role, type: 'login' };
+    // Store OTP with expiration
+    OTPs[number] = { 
+      otp, 
+      role, 
+      type: 'login',
+      expiresAt: Date.now() + 10 * 60 * 1000 // OTP expires in 10 minutes
+    };
 
-    await sendOtp(number, otp);
+    // Send OTP using 2Factor API
+    await send2FactorOTP(number, otp);
 
     res.status(200).json({ message: `OTP sent to ${number}` });
   } catch (err) {
@@ -103,7 +133,6 @@ exports.sendOtpForLogin = async (req, res) => {
     res.status(500).json({ message: 'Failed to send OTP' });
   }
 };
-
 
 exports.verifyLoginOtp = async (req, res) => {
   const { number, otp, role } = req.body;
@@ -115,7 +144,7 @@ exports.verifyLoginOtp = async (req, res) => {
   try {
     const data = OTPs[number];
 
-    if (!data || data.otp !== otp || data.type !== 'login' || data.role !== role) {
+    if (!data || data.otp !== otp || data.type !== 'login' || data.role !== role || Date.now() > data.expiresAt) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
@@ -129,9 +158,7 @@ exports.verifyLoginOtp = async (req, res) => {
       return res.status(403).json({ message: 'Vendor not approved by admin' });
     }
 
-    const token = jwt.sign({ vendorId: vendor._id , role: 'vendor'}, process.env.JWT_SECRET, {
-     
-    });
+    const token = jwt.sign({ vendorId: vendor._id, role: 'vendor'}, process.env.JWT_SECRET);
 
     delete OTPs[number];
 
@@ -143,63 +170,58 @@ exports.verifyLoginOtp = async (req, res) => {
   }
 };
 
-
-
-  
-
 // Update vendor profile after approval using vendorId in URL
 exports.updateProfile = async (req, res) => {
-    const { state, postCode, email, aboutVendor, profileImage, city, name, role } = req.body;
-    const { vendorId } = req.params; 
-  
-    try {
-      // Step 1: Find the vendor by their ID
-      const vendor = await Vendor.findById(vendorId);
-  
-      if (!vendor) {
-        return res.status(404).json({ message: 'Vendor not found' });
-      }
-  
-      // Step 2: Check if the vendor is approved
-      if (!vendor.approvalStatus) {
-        return res.status(403).json({ message: 'Vendor not approved by admin yet' });
-      }
-  
-      // Step 3: Update fields, but keep number and approvalStatus unchanged
-      vendor.name = name || vendor.name;
-      vendor.role = role || vendor.role;
-      vendor.city = city || vendor.city;
-      vendor.state = state || vendor.state;
-      vendor.postCode = postCode || vendor.postCode;
-      vendor.email = email || vendor.email;
-      vendor.aboutVendor = aboutVendor || vendor.aboutVendor;
-      vendor.profileImage = profileImage || vendor.profileImage;
-  
-      // Step 4: Save the updated vendor
-      await vendor.save();
-  
-      // Step 5: Return a success message
-      res.status(200).json({ message: 'Profile updated successfully' });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Server error' });
-    }
-  };
+  const { state, postCode, email, aboutVendor, profileImage, city, name, role } = req.body;
+  const { vendorId } = req.params; 
 
+  try {
+    // Step 1: Find the vendor by their ID
+    const vendor = await Vendor.findById(vendorId);
 
-  exports.getProfile = async (req, res) => {
-    const { vendorId } = req.params;
-  
-    try {
-      const vendor = await Vendor.findById(vendorId).select('-__v -password'); // exclude unwanted fields
-  
-      if (!vendor) {
-        return res.status(404).json({ message: 'Vendor not found' });
-      }
-  
-      res.status(200).json({ success: true, vendor });
-    } catch (err) {
-      console.error('Get Profile error:', err);
-      res.status(500).json({ message: 'Server error while fetching profile' });
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor not found' });
     }
-  };
+
+    // Step 2: Check if the vendor is approved
+    if (!vendor.approvalStatus) {
+      return res.status(403).json({ message: 'Vendor not approved by admin yet' });
+    }
+
+    // Step 3: Update fields, but keep number and approvalStatus unchanged
+    vendor.name = name || vendor.name;
+    vendor.role = role || vendor.role;
+    vendor.city = city || vendor.city;
+    vendor.state = state || vendor.state;
+    vendor.postCode = postCode || vendor.postCode;
+    vendor.email = email || vendor.email;
+    vendor.aboutVendor = aboutVendor || vendor.aboutVendor;
+    vendor.profileImage = profileImage || vendor.profileImage;
+
+    // Step 4: Save the updated vendor
+    await vendor.save();
+
+    // Step 5: Return a success message
+    res.status(200).json({ message: 'Profile updated successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.getProfile = async (req, res) => {
+  const { vendorId } = req.params;
+
+  try {
+    const vendor = await Vendor.findById(vendorId).select('-__v -password'); // exclude unwanted fields
+
+    if (!vendor) {
+      return res.status(404).json({ message: 'Vendor not found' });
+    }
+
+    res.status(200).json({ success: true, vendor });
+  } catch (err) {
+    console.error('Get Profile error:', err);
+    res.status(500).json({ message: 'Server error while fetching profile' });
+  }
+};
