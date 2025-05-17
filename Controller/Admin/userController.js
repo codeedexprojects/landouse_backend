@@ -84,7 +84,7 @@ exports.updateUserByAdmin = async (req, res) => {
   
       // ✅ Update profile image if file is uploaded
       if (req.file) {
-        user.profileImage = req.file.path; // Save the file path
+        user.profileImage = req.file.location; // Save the file path
       }
   
       await user.save();

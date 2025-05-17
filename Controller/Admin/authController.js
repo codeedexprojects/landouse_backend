@@ -56,7 +56,7 @@ const updateAdminProfile = async (req, res) => {
 
     // Check if file was uploaded (requires multer)
     if (req.file) {
-      profileImage = req.file.path;
+      profileImage = req.file.location;
     }
 
     const admin = await Admin.findById(adminId);

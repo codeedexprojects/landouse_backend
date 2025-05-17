@@ -27,7 +27,8 @@ exports.addProperty = async (req, res) => {
       private_note
     } = req.body;
 
-    const photos = req.files ? req.files.map(file => file.path) : [];
+    const photos = req.files ? req.files.map(file => file.location) : [];
+
 
     // Generate product code
     const generateProductCode = (type) => {
@@ -116,7 +117,7 @@ exports.getPropertyById = async (req, res) => {
 
 exports.updateProperty = async (req, res) => {
   try {
-    const photos = req.files ? req.files.map(file => file.path) : [];
+    const photos = req.files ? req.files.map(file => file.location) : [];
     const updatedData = {
       ...req.body,
       photos

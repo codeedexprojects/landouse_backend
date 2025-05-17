@@ -27,7 +27,7 @@ exports.addProperty = async (req, res) => {
        private_note
      } = req.body;
  
-     const photos = req.files ? req.files.map(file => file.path) : [];
+     const photos = req.files ? req.files.map(file => file.location) : [];
 
        // Generate product code
     const generateProductCode = (type) => {
@@ -115,7 +115,7 @@ exports.updateProperty = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Property not found or unauthorized access' });
     }
 
-    const photos = req.files ? req.files.map(file => file.path) : [];
+    const photos = req.files ? req.files.map(file => file.location) : [];
     const updatedData = {
       ...req.body,
       photos

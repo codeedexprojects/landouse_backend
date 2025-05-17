@@ -3,13 +3,17 @@ const Property = require('../../Models/Admin/propertyModel');
 
 exports.getAllProperties = async (req, res) => {
   try {
-    const properties = await Property.find().populate('created_by', 'name email role');
+    const properties = await Property.find()
+      .populate('created_by', 'name email role')
+      .sort({ created_at: -1 }); // Sort by created_at descending (newest first)
+
     res.status(200).json({ success: true, properties });
   } catch (error) {
     console.error('Error fetching properties:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch properties' });
   }
 };
+
 
 exports.getPropertyById = async (req, res) => {
   try {

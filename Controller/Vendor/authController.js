@@ -172,23 +172,21 @@ exports.verifyLoginOtp = async (req, res) => {
 
 // Update vendor profile after approval using vendorId in URL
 exports.updateProfile = async (req, res) => {
-  const { state, postCode, email, aboutVendor, profileImage, city, name, role } = req.body;
+  const { state, postCode, email, aboutVendor, city, name, role } = req.body;
   const { vendorId } = req.params; 
 
   try {
-    // Step 1: Find the vendor by their ID
     const vendor = await Vendor.findById(vendorId);
 
     if (!vendor) {
       return res.status(404).json({ message: 'Vendor not found' });
     }
 
-    // Step 2: Check if the vendor is approved
     if (!vendor.approvalStatus) {
       return res.status(403).json({ message: 'Vendor not approved by admin yet' });
     }
 
-    // Step 3: Update fields, but keep number and approvalStatus unchanged
+    // Update fields from body
     vendor.name = name || vendor.name;
     vendor.role = role || vendor.role;
     vendor.city = city || vendor.city;
@@ -196,18 +194,24 @@ exports.updateProfile = async (req, res) => {
     vendor.postCode = postCode || vendor.postCode;
     vendor.email = email || vendor.email;
     vendor.aboutVendor = aboutVendor || vendor.aboutVendor;
-    vendor.profileImage = profileImage || vendor.profileImage;
 
-    // Step 4: Save the updated vendor
+    // Update profileImage from file upload if exists, else from body
+    if (req.file && req.file.location) {
+      vendor.profileImage = req.file.location;
+    } else if (req.body.profileImage) {
+      vendor.profileImage = req.body.profileImage;
+    }
+    // else keep old profileImage as is
+
     await vendor.save();
 
-    // Step 5: Return a success message
     res.status(200).json({ message: 'Profile updated successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 exports.getProfile = async (req, res) => {
   const { vendorId } = req.params;

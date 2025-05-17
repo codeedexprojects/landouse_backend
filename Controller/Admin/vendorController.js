@@ -191,7 +191,7 @@ exports.updateVendor = async (req, res) => {
 
     // If a new image is uploaded
     if (req.file) {
-      updateData.profileImage = req.file.filename; // or req.file.path if you want full path
+      updateData.profileImage = req.file.location; // or req.file.path if you want full path
     }
 
     // Update vendor fields

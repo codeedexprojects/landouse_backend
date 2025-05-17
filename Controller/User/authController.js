@@ -320,7 +320,7 @@ exports.updateProfile = async (req, res) => {
 
     // Image path update
     if (req.file) {
-      user.profileImage = req.file.path;
+      user.profileImage = req.file.location;
     }
 
     await user.save();
