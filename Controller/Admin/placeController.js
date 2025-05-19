@@ -18,12 +18,17 @@ exports.addDistrict = async (req, res) => {
 // Add a sub-place to a district
 exports.addSubPlace = async (req, res) => {
   try {
-    const { districtId, subPlaceName } = req.body;
+    const { districtId, subPlaceName, nearPlaces } = req.body;
 
     const district = await Place.findById(districtId);
     if (!district) return res.status(404).json({ message: 'District not found' });
 
-    district.subPlaces.push({ name: subPlaceName });
+    const subPlace = {
+      name: subPlaceName,
+      nearPlaces: (nearPlaces || []).map(name => ({ name }))
+    };
+
+    district.subPlaces.push(subPlace);
     await district.save();
 
     res.status(200).json({ message: 'Sub-place added successfully', district });
@@ -31,6 +36,7 @@ exports.addSubPlace = async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
 
 // Get all districts with sub-places
 exports.getAllDistricts = async (req, res) => {

@@ -24,18 +24,32 @@ exports.addProperty = async (req, res) => {
       zipcode,
       locationmark,
       coordinates,
-      private_note
+      private_note,
+      isFeatured = false,
+      isLatest = false
     } = req.body;
 
     const photos = req.files ? req.files.map(file => file.location) : [];
 
 
     // Generate product code
-    const generateProductCode = (type) => {
-      const randomString = Math.random().toString(36).substring(2, 7).toUpperCase();
-      return `${(type || 'PRO').slice(0, 3).toUpperCase()}${randomString}`;
+    const generateProductCode = async () => {
+      const lastProperty = await Property.findOne().sort({ createdAt: -1 }); // Or use _id: -1 if no createdAt
+
+      let lastCode = 0;
+      if (lastProperty && lastProperty.productCode) {
+        const match = lastProperty.productCode.match(/\d+/); // Extract the number
+        if (match) {
+          lastCode = parseInt(match[0], 10);
+        }
+      }
+
+      const newCodeNumber = (lastCode + 1).toString().padStart(3, '0'); // e.g., 1 → 001
+      return `L${newCodeNumber}`;
     };
-    const productCode = generateProductCode(property_type);
+
+    const productCode = await generateProductCode();
+
 
     const newProperty = new Property({
       property_type,
@@ -57,6 +71,8 @@ exports.addProperty = async (req, res) => {
       address,
       zipcode,
       locationmark,
+      isFeatured,  
+      isLatest,
       productCode, // Add productCode here
       coordinates: {
         latitude: coordinates?.latitude,
@@ -91,7 +107,7 @@ exports.getAllProperties = async (req, res) => {
     const properties = await Property.find()
       .populate({
         path: 'created_by',
-       
+
       });
 
     res.status(200).json({ success: true, properties });
@@ -151,7 +167,7 @@ exports.deleteProperty = async (req, res) => {
 exports.changeSoldOutStatus = async (req, res) => {
   const { id } = req.params;
   const { soldOut } = req.body; // Expecting the soldOut value to be passed in the request body
-  
+
   try {
     const property = await Property.findById(id);
 

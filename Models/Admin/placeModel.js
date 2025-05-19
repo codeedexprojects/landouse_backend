@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
 
 const subPlaceSchema = new mongoose.Schema({
-  name: { type: String, required: true }
+  name: { type: String, required: true },
+  nearPlaces: [
+    {
+      name: { type: String, required: true }
+    }
+  ]
 });
 
 const placeSchema = new mongoose.Schema({

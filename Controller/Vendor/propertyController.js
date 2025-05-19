@@ -1,71 +1,86 @@
 const Property = require('../../Models/Admin/propertyModel');
 
 exports.addProperty = async (req, res) => {
- try {
-     const {
-       user_id,
-       property_type,
-       property_price,
-       price_per_cent,
-       area,
-       buildIn,
-       carpet_area,
-       car_parking,
-       car_access,
-       floor,
-       road_frontage,
-       whats_nearby,
-       cent,
-       maxrooms,
-       beds,
-       baths,
-       description,
-       address,
-       zipcode,
-       locationmark,
-       coordinates,
-       private_note
-     } = req.body;
- 
-     const photos = req.files ? req.files.map(file => file.location) : [];
+  try {
+    const {
+      user_id,
+      property_type,
+      property_price,
+      price_per_cent,
+      area,
+      buildIn,
+      carpet_area,
+      car_parking,
+      car_access,
+      floor,
+      road_frontage,
+      whats_nearby,
+      cent,
+      maxrooms,
+      beds,
+      baths,
+      description,
+      address,
+      zipcode,
+      locationmark,
+      coordinates,
+      private_note,
+      isFeatured = false,
+      isLatest = false
+    } = req.body;
 
-       // Generate product code
-    const generateProductCode = (type) => {
-      const randomString = Math.random().toString(36).substring(2, 7).toUpperCase();
-      return `${(type || 'PRO').slice(0, 3).toUpperCase()}${randomString}`;
+    const photos = req.files ? req.files.map(file => file.location) : [];
+
+    // Generate product code
+    const generateProductCode = async () => {
+      const lastProperty = await Property.findOne().sort({ createdAt: -1 }); // Or use _id: -1 if no createdAt
+
+      let lastCode = 0;
+      if (lastProperty && lastProperty.productCode) {
+        const match = lastProperty.productCode.match(/\d+/); // Extract the number
+        if (match) {
+          lastCode = parseInt(match[0], 10);
+        }
+      }
+
+      const newCodeNumber = (lastCode + 1).toString().padStart(3, '0'); // e.g., 1 → 001
+      return `L${newCodeNumber}`;
     };
-    const productCode = generateProductCode(property_type);
- 
-     const newProperty = new Property({
-       property_type,
-       property_price,
-       price_per_cent,
-       area,
-       buildIn,
-       carpet_area,
-       car_parking,
-       car_access,
-       floor,
-       road_frontage,
-       whats_nearby,
-       cent,
-       maxrooms,
-       beds,
-       baths,
-       description,
-       address,
-       zipcode,
-       locationmark,
-       productCode,
-       coordinates: {
-         latitude: coordinates?.latitude,
-         longitude: coordinates?.longitude
-       },
-       photos,
-       private_note,
-       created_by: user_id,
-       created_by_model: 'Admin'
-     });
+
+    const productCode = await generateProductCode();
+
+    const newProperty = new Property({
+      property_type,
+      property_price,
+      price_per_cent,
+      area,
+      buildIn,
+      carpet_area,
+      car_parking,
+      car_access,
+      floor,
+      road_frontage,
+      whats_nearby,
+      cent,
+      maxrooms,
+      beds,
+      baths,
+      description,
+      address,
+      zipcode,
+      locationmark,
+      productCode,
+      isFeatured,
+      isLatest,
+      coordinates: {
+        latitude: coordinates?.latitude,
+        longitude: coordinates?.longitude
+      },
+      photos,
+      private_note,
+      created_by: user_id,
+      created_by_model: 'Admin'
+    });
 
     await newProperty.save();
 
@@ -93,11 +108,11 @@ exports.getPropertyById = async (req, res) => {
   try {
     const vendorId = req.user.vendorId;
     const property = await Property.findOne({ _id: req.params.id, created_by: vendorId });
-    
+
     if (!property) {
       return res.status(404).json({ success: false, message: 'Property not found or unauthorized access' });
     }
-    
+
     res.status(200).json({ success: true, property });
   } catch (error) {
     console.error('Error fetching property:', error);
@@ -110,7 +125,7 @@ exports.updateProperty = async (req, res) => {
   try {
     const vendorId = req.user.vendorId;
     const property = await Property.findOne({ _id: req.params.id, created_by: vendorId });
-    
+
     if (!property) {
       return res.status(404).json({ success: false, message: 'Property not found or unauthorized access' });
     }
@@ -120,10 +135,10 @@ exports.updateProperty = async (req, res) => {
       ...req.body,
       photos
     };
-    
+
     const updatedProperty = await Property.findByIdAndUpdate(
-      req.params.id, 
-      updatedData, 
+      req.params.id,
+      updatedData,
       { new: true }
     );
 
@@ -139,7 +154,7 @@ exports.deleteProperty = async (req, res) => {
   try {
     const vendorId = req.user.vendorId;
     const property = await Property.findOne({ _id: req.params.id, created_by: vendorId });
-    
+
     if (!property) {
       return res.status(404).json({ success: false, message: 'Property not found or unauthorized access' });
     }
