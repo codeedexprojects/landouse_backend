@@ -34,19 +34,22 @@ exports.addProperty = async (req, res) => {
 
     // Generate product code
     const generateProductCode = async () => {
-      const lastProperty = await Property.findOne().sort({ createdAt: -1 }); // Or use _id: -1 if no createdAt
+      const lastProperty = await Property
+        .findOne({ productCode: { $exists: true } })
+        .sort({ productCode: -1 });
 
       let lastCode = 0;
       if (lastProperty && lastProperty.productCode) {
-        const match = lastProperty.productCode.match(/\d+/); // Extract the number
+        const match = lastProperty.productCode.match(/\d+/);
         if (match) {
           lastCode = parseInt(match[0], 10);
         }
       }
 
-      const newCodeNumber = (lastCode + 1).toString().padStart(3, '0'); // e.g., 1 → 001
+      const newCodeNumber = (lastCode + 1).toString().padStart(3, '0');
       return `L${newCodeNumber}`;
     };
+
 
     const productCode = await generateProductCode();
 
@@ -71,7 +74,7 @@ exports.addProperty = async (req, res) => {
       address,
       zipcode,
       locationmark,
-      isFeatured,  
+      isFeatured,
       isLatest,
       productCode, // Add productCode here
       coordinates: {
