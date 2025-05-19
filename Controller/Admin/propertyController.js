@@ -34,22 +34,40 @@ exports.addProperty = async (req, res) => {
 
     // Generate product code
     const generateProductCode = async () => {
-      const lastProperty = await Property
-        .findOne({ productCode: { $exists: true } })
-        .sort({ productCode: -1 });
+      try {
+        // First try to find the highest L-prefixed numeric code
+        const properties = await Property.find({
+          productCode: { $regex: /^L\d+$/ } // Only codes starting with L followed by digits
+        })
+          .sort({ productCode: -1 })
+          .limit(1)
+          .select('productCode');
 
-      let lastCode = 0;
-      if (lastProperty && lastProperty.productCode) {
-        const match = lastProperty.productCode.match(/\d+/);
-        if (match) {
-          lastCode = parseInt(match[0], 10);
+        let lastCode = 0;
+        if (properties.length > 0 && properties[0].productCode) {
+          const code = properties[0].productCode;
+          const numericPart = code.substring(1); // Remove the 'L'
+          lastCode = parseInt(numericPart, 10) || 0;
         }
+
+        // If no valid codes found, check if we have any properties at all
+        if (lastCode === 0) {
+          const count = await Property.countDocuments();
+          if (count === 0) {
+            return 'L001'; // First property ever
+          }
+        }
+
+        const newCodeNumber = (lastCode + 1).toString().padStart(3, '0');
+        return `L${newCodeNumber}`;
+
+      } catch (error) {
+        console.error("Error generating product code:", error);
+        // Fallback mechanism
+        const count = await Property.countDocuments();
+        return `L${(count + 1).toString().padStart(3, '0')}`;
       }
-
-      const newCodeNumber = (lastCode + 1).toString().padStart(3, '0');
-      return `L${newCodeNumber}`;
     };
-
 
     const productCode = await generateProductCode();
 
@@ -111,7 +129,8 @@ exports.getAllProperties = async (req, res) => {
       .populate({
         path: 'created_by',
 
-      });
+      })
+      .sort({ created_at: -1 });
 
     res.status(200).json({ success: true, properties });
   } catch (error) {

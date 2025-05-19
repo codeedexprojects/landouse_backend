@@ -32,22 +32,43 @@ exports.addProperty = async (req, res) => {
     const photos = req.files ? req.files.map(file => file.location) : [];
 
     // Generate product code
-    const generateProductCode = async () => {
-      const lastProperty = await Property.findOne().sort({ createdAt: -1 }); // Or use _id: -1 if no createdAt
-
-      let lastCode = 0;
-      if (lastProperty && lastProperty.productCode) {
-        const match = lastProperty.productCode.match(/\d+/); // Extract the number
-        if (match) {
-          lastCode = parseInt(match[0], 10);
-        }
-      }
-
-      const newCodeNumber = (lastCode + 1).toString().padStart(3, '0'); // e.g., 1 → 001
-      return `L${newCodeNumber}`;
-    };
-
-    const productCode = await generateProductCode();
+   const generateProductCode = async () => {
+         try {
+           // First try to find the highest L-prefixed numeric code
+           const properties = await Property.find({
+             productCode: { $regex: /^L\d+$/ } // Only codes starting with L followed by digits
+           })
+             .sort({ productCode: -1 })
+             .limit(1)
+             .select('productCode');
+   
+           let lastCode = 0;
+           if (properties.length > 0 && properties[0].productCode) {
+             const code = properties[0].productCode;
+             const numericPart = code.substring(1); // Remove the 'L'
+             lastCode = parseInt(numericPart, 10) || 0;
+           }
+   
+           // If no valid codes found, check if we have any properties at all
+           if (lastCode === 0) {
+             const count = await Property.countDocuments();
+             if (count === 0) {
+               return 'L001'; // First property ever
+             }
+           }
+   
+           const newCodeNumber = (lastCode + 1).toString().padStart(3, '0');
+           return `L${newCodeNumber}`;
+   
+         } catch (error) {
+           console.error("Error generating product code:", error);
+           // Fallback mechanism
+           const count = await Property.countDocuments();
+           return `L${(count + 1).toString().padStart(3, '0')}`;
+         }
+       };
+   
+       const productCode = await generateProductCode();
 
     const newProperty = new Property({
       property_type,
@@ -95,7 +116,7 @@ exports.addProperty = async (req, res) => {
 exports.getAllProperties = async (req, res) => {
   try {
     const vendorId = req.user.vendorId; // Assuming vendor ID is stored in req.user after authentication
-    const properties = await Property.find({ created_by: vendorId }).populate('created_by', 'name email role');
+    const properties = await Property.find({ created_by: vendorId }).populate('created_by', 'name email role').sort({ created_at: -1 });
     res.status(200).json({ success: true, properties });
   } catch (error) {
     console.error('Error fetching properties:', error);
