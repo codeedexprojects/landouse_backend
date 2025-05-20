@@ -100,7 +100,7 @@ exports.addProperty = async (req, res) => {
       photos,
       private_note,
       created_by: user_id,
-      created_by_model: 'Admin'
+      created_by_model: 'Vendor'
     });
 
     await newProperty.save();
