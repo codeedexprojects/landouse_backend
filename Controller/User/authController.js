@@ -4,7 +4,7 @@ const Affiliate = require('../../Models/Affiliate/authModel');
 const axios = require('axios');
 
 // Configure 2Factor API
-const TWO_FACTOR_API_KEY = process.env.TWO_FACTOR_API_KEY; // Store this in your .env file
+const TWO_FACTOR_API_KEY = process.env.TWO_FACTOR_API_KEY; 
 const OTP_TEMPLATE = 'Your OTP for verification is {otp}. Valid for 10 minutes.';
 
 // Generate referral ID for new users

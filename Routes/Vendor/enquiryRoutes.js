@@ -15,6 +15,9 @@ router.get('/:vendorId/enquiry-stats', enquiryController.getEnquiryStatsForVendo
 
 router.get('/:vendorId/counts', enquiryController.getEnquiryCountsForVendor);
 
+router.get('/property/:productId', enquiryController.getEnquiriesByProductId);
+
+
 router.patch('/:enquiryId/mark-read', enquiryController.markEnquiryAsRead);
 
 
