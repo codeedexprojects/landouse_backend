@@ -6,7 +6,7 @@ const jwtVerify = require('../../Middlewares/jwtMiddleware')
 
 
 // Admin or Vendor can add a property
-router.post('/add', upload.array('photos', 10),jwtVerify(['admin']), propertyController.addProperty);
+router.post('/add', upload.array('photos', 15),jwtVerify(['admin']), propertyController.addProperty);
 
 // Get all properties (for admin/vendor dashboard view)
 router.get('/get', jwtVerify(['admin']), propertyController.getAllProperties);
@@ -15,7 +15,7 @@ router.get('/get', jwtVerify(['admin']), propertyController.getAllProperties);
 router.get('/:id',jwtVerify(['admin']), propertyController.getPropertyById);
 
 // Update property
-router.patch('/update/:id',jwtVerify(['admin']), upload.array('photos', 10), propertyController.updateProperty);
+router.patch('/update/:id',jwtVerify(['admin']), upload.array('photos', 15), propertyController.updateProperty);
 
 // Delete property
 router.delete('/delete/:id',jwtVerify(['admin']), propertyController.deleteProperty);
