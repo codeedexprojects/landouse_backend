@@ -15,3 +15,25 @@ exports.getAllEnquiries = async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching enquiries.' });
   }
 };
+
+// Mark a single enquiry as read
+exports.markAsRead = async (req, res) => {
+  const { enquiryId } = req.params;
+
+  try {
+    const enquiry = await HomeLoan.findByIdAndUpdate(
+      enquiryId,
+      { isRead: true },
+      { new: true }
+    );
+
+    if (!enquiry) {
+      return res.status(404).json({ message: 'Enquiry not found.' });
+    }
+
+    res.status(200).json({ message: 'Enquiry marked as read.', enquiry });
+  } catch (err) {
+    console.error('Mark as read error:', err);
+    res.status(500).json({ message: 'Server error while updating enquiry.' });
+  }
+};

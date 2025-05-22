@@ -28,7 +28,11 @@ const homeLoanSchema = new mongoose.Schema({
     monthlySalary: {
         type: Number,
         required: true
-    }
+    },
+    isRead: {
+    type: Boolean,
+    default: false
+  }
 }, {
     timestamps: true
 });
