@@ -44,6 +44,7 @@ const PropertySchema = new mongoose.Schema({
     enum: ['Admin', 'Vendor']
   },
   productCode:{type:String , unique: true},
+  isApproved: { type: Boolean, default: true },
   created_at: { type: Date, default: Date.now }
 });
 

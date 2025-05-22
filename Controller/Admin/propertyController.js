@@ -208,3 +208,36 @@ exports.changeSoldOutStatus = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to update soldOut status' });
   }
 };
+
+exports.approveProperty = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const property = await Property.findById(id);
+
+    if (!property) {
+      return res.status(404).json({ success: false, message: 'Property not found' });
+    }
+
+    property.isApproved = true;
+    await property.save();
+
+    res.status(200).json({ success: true, message: 'Property approved', property });
+  } catch (error) {
+    console.error('Error approving property:', error);
+    res.status(500).json({ success: false, message: 'Failed to approve property' });
+  }
+};
+
+exports.getPendingProperties = async (req, res) => {
+  try {
+    const properties = await Property.find({ isApproved: false })
+      .populate('created_by', 'name email role')
+      .sort({ created_at: -1 });
+
+    res.status(200).json({ success: true, properties });
+  } catch (error) {
+    console.error('Error fetching pending properties:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch pending properties' });
+  }
+};

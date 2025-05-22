@@ -93,6 +93,7 @@ exports.addProperty = async (req, res) => {
       productCode,
       isFeatured,
       isLatest,
+      isApproved: false, 
       coordinates: {
         latitude: coordinates?.latitude,
         longitude: coordinates?.longitude

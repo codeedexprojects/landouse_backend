@@ -1,11 +1,10 @@
 const Property = require('../../Models/Admin/propertyModel');
 
-
 exports.getAllProperties = async (req, res) => {
   try {
-    const properties = await Property.find()
+    const properties = await Property.find({ soldOut: false ,isApproved: true }) 
       .populate('created_by', 'name email role')
-      .sort({ created_at: -1 }); // Sort by created_at descending (newest first)
+      .sort({ created_at: -1 }); 
 
     res.status(200).json({ success: true, properties });
   } catch (error) {
@@ -13,7 +12,6 @@ exports.getAllProperties = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch properties' });
   }
 };
-
 
 exports.getPropertyById = async (req, res) => {
   try {

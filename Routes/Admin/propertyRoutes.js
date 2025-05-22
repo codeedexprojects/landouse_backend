@@ -14,8 +14,14 @@ router.get('/get', jwtVerify(['admin']), propertyController.getAllProperties);
 // Optional: get single property
 router.get('/:id',jwtVerify(['admin']), propertyController.getPropertyById);
 
+// get pending properties
+router.get('/get/pending',jwtVerify(['admin']), propertyController.getPendingProperties);
+
 // Update property
 router.patch('/update/:id',jwtVerify(['admin']), upload.array('photos', 15), propertyController.updateProperty);
+
+// approve proerty 
+router.patch('/approve/:id',jwtVerify(['admin']), propertyController.approveProperty );
 
 // Delete property
 router.delete('/delete/:id',jwtVerify(['admin']), propertyController.deleteProperty);
