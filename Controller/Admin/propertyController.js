@@ -25,7 +25,7 @@ exports.addProperty = async (req, res) => {
       locationmark,
       coordinates,
       private_note,
-      isFeatured = false,
+      isFeatured = true,
       isLatest = false
     } = req.body;
 
@@ -155,21 +155,58 @@ exports.getPropertyById = async (req, res) => {
 
 exports.updateProperty = async (req, res) => {
   try {
-    const photos = req.files ? req.files.map(file => file.location) : [];
-    const updatedData = {
-      ...req.body,
-      photos
-    };
-    const updatedProperty = await Property.findByIdAndUpdate(req.params.id, updatedData, { new: true });
-
-    if (!updatedProperty) {
+    const existingProperty = await Property.findById(req.params.id);
+    if (!existingProperty) {
       return res.status(404).json({ success: false, message: 'Property not found' });
     }
 
-    res.status(200).json({ success: true, message: 'Property updated', property: updatedProperty });
+    // Prepare update data
+    const updatedData = { ...req.body };
+
+    // Handle photos only if photo-related data is sent
+    if (req.body.existing_photos || req.files) {
+      let finalPhotos = [];
+      
+      // Add existing photos to keep
+      if (req.body.existing_photos) {
+        const existingPhotos = Array.isArray(req.body.existing_photos) 
+          ? req.body.existing_photos 
+          : [req.body.existing_photos];
+        finalPhotos = [...existingPhotos];
+      }
+      
+      // Add new uploaded photos
+      if (req.files && req.files.length > 0) {
+        const newPhotos = req.files.map(file => file.location);
+        finalPhotos = [...finalPhotos, ...newPhotos];
+      }
+      
+      updatedData.photos = finalPhotos;
+    }
+    // If no photo data is sent, don't update photos field at all
+
+    // Clean up helper fields
+    delete updatedData.existing_photos;
+    delete updatedData.photos_to_remove;
+
+    const updatedProperty = await Property.findByIdAndUpdate(
+      req.params.id, 
+      updatedData, 
+      { new: true }
+    );
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Property updated successfully', 
+      property: updatedProperty 
+    });
+
   } catch (error) {
     console.error('Error updating property:', error);
-    res.status(500).json({ success: false, message: 'Failed to update property' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to update property' 
+    });
   }
 };
 

@@ -26,7 +26,7 @@ exports.addProperty = async (req, res) => {
       coordinates,
       private_note,
       isFeatured = false,
-      isLatest = false
+      isLatest = true
     } = req.body;
 
     const photos = req.files ? req.files.map(file => file.location) : [];

@@ -26,7 +26,7 @@ const PropertySchema = new mongoose.Schema({
   zipcode: { type: String },
   locationmark: { type: String },
   isFeatured: { type: Boolean, default: false },  
-  isLatest: { type: Boolean, default: false },
+  isLatest: { type: Boolean, default: true },
   coordinates: {
     latitude: { type: Number },
     longitude: { type: Number }
