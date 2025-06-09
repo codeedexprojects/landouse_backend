@@ -5,7 +5,7 @@ const OTPs = {};
 
 // 2Factor OTP Configuration
 const TWO_FACTOR_API_KEY = process.env.TWO_FACTOR_API_KEY; // Add this to your environment variables
-const TWO_FACTOR_TEMPLATE_NAME = 'YourTemplateName'; // Set your template name
+const OTP_TEMPLATE_NAME = 'OTP Login Verification';
 
 // Function to generate a random 6-digit OTP
 const generateOTP = () => {
@@ -15,13 +15,19 @@ const generateOTP = () => {
 // Function to send OTP via 2Factor API
 const send2FactorOTP = async (number, otp) => {
   try {
-    const response = await axios.get('https://2factor.in/API/V1/' + TWO_FACTOR_API_KEY + '/SMS/' + number + '/' + otp + '/' + TWO_FACTOR_TEMPLATE_NAME);
+    const encodedTemplate = encodeURIComponent(OTP_TEMPLATE_NAME); // "OTP Login Verification" → "OTP%20Login%20Verification"
+    
+    const response = await axios.get(
+      `https://2factor.in/API/V1/${TWO_FACTOR_API_KEY}/SMS/${number}/${otp}/${encodedTemplate}`
+    );
+    
     return response.data;
   } catch (error) {
     console.error('2Factor API Error:', error);
     throw new Error('Failed to send OTP via 2Factor');
   }
 };
+
 
 // Step 1: Send OTP for Registration
 exports.sendOtpForRegistration = async (req, res) => {

@@ -5,7 +5,7 @@ const axios = require('axios');
 
 // Configure 2Factor API
 const TWO_FACTOR_API_KEY = process.env.TWO_FACTOR_API_KEY; 
-const OTP_TEMPLATE = 'Your OTP for verification is {otp}. Valid for 10 minutes.';
+const OTP_TEMPLATE_NAME = 'OTP Login Verification';
 
 // Generate referral ID for new users
 const generateReferralId = (name) => {
@@ -21,9 +21,9 @@ const generateOTP = () => {
 // Send OTP via 2Factor API
 const sendOTP = async (phoneNumber, otp) => {
   try {
-    const message = OTP_TEMPLATE.replace('{otp}', otp);
-    const url = `https://2factor.in/API/V1/${TWO_FACTOR_API_KEY}/SMS/${phoneNumber}/${otp}`;
-    
+    const encodedTemplateName = encodeURIComponent(OTP_TEMPLATE_NAME); // Converts spaces to '+'
+    const url = `https://2factor.in/API/V1/${TWO_FACTOR_API_KEY}/SMS/${phoneNumber}/${otp}/${encodedTemplateName}`;
+
     const response = await axios.get(url);
     return response.data;
   } catch (error) {
