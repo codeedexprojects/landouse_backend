@@ -26,7 +26,7 @@ exports.addProperty = async (req, res) => {
       coordinates,
       private_note,
       isFeatured = true,
-      isLatest = false
+      isLatest = true
     } = req.body;
 
     const photos = req.files ? req.files.map(file => file.location) : [];
@@ -138,7 +138,6 @@ exports.getAllProperties = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch properties' });
   }
 };
-
 
 exports.getPropertyById = async (req, res) => {
   try {
