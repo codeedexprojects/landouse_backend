@@ -6,7 +6,7 @@ const jwtVerify = require('../../Middlewares/jwtMiddleware')
 
 
 // Admin or Vendor can add a property
-router.post('/add', upload.array('photos', 15),jwtVerify(['vendor']), propertyController.addProperty);
+router.post('/add', upload.array('photos', 25),jwtVerify(['vendor']), propertyController.addProperty);
 
 // Get all properties (for admin/vendor dashboard view)
 router.get('/get',jwtVerify(['vendor']),  propertyController.getAllProperties);
