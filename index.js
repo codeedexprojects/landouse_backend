@@ -18,6 +18,7 @@ const affiliateRoutes=require('./Routes/Admin/affiliateRoutes')
 const overviewRoutes=require('./Routes/Admin/overviewRoutes')
 const placeRoutes=require('./Routes/Admin/placeRoutes')
 const contactAdminRoutes=require('./Routes/Admin/contactRoutes')
+const sellPropertyRoutesAdmin=require('./Routes/Admin/sellPropertyRoutes')
 
 const vendorAuthRoutes=require('./Routes/Vendor/authRoutes')
 const vendorPropertyRoutes=require('./Routes/Vendor/propertyRoutes')
@@ -31,7 +32,7 @@ const comparisonRoutes=require('./Routes/User/comparisonRoutes')
 const homeLoanRoutes=require('./Routes/User/homeLoanRoutes')
 const userPropertyRoutes=require('./Routes/User/propertyRoutes')
 const contactRoutes=require('./Routes/User/contactRoutes')
-
+const  sellPropertyRoutes=require('./Routes/User/sellPropertyRoutes')
 const affiliateAuthRoutes=require('./Routes/Affiliate/authRoutes')
 
 
@@ -46,6 +47,7 @@ app.use('/api/admin/affiliate',affiliateRoutes)
 app.use('/api/admin/overview',overviewRoutes)
 app.use('/api/admin/place',placeRoutes)
 app.use('/api/admin/contact',contactAdminRoutes)
+app.use('/api/admin/sellproperty',sellPropertyRoutesAdmin)
 
 // vendor routes 
 app.use('/api/vendor/auth',vendorAuthRoutes)
@@ -61,6 +63,7 @@ app.use('/api/user/compare',comparisonRoutes)
 app.use('/api/user/homeloan',homeLoanRoutes)
 app.use('/api/user/property',userPropertyRoutes)
 app.use('/api/user/contact',contactRoutes)
+app.use('/api/user/sellproperty',sellPropertyRoutes)
 
 // affiliate routes
 app.use('/api/affiliate/auth',affiliateAuthRoutes)
