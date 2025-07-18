@@ -5,7 +5,12 @@ exports.getAllEnquiries = async (req, res) => {
   try {
     const enquiries = await Enquiry.find()
       .populate('userId', 'firstName lastName phoneNumber email') // populate user info
-      .populate('propertyId')
+      .populate({
+        path: 'propertyId',
+        populate: {
+          path: 'created_by' 
+        }
+      });
 
 
     res.status(200).json({ enquiries });
