@@ -5,7 +5,8 @@ exports.getAllEnquiries = async (req, res) => {
   try {
     const enquiries = await Enquiry.find()
       .populate('userId', 'firstName lastName phoneNumber email') // populate user info
-      .populate('propertyId', 'title address'); // populate property info
+      .populate('propertyId')
+
 
     res.status(200).json({ enquiries });
   } catch (err) {
