@@ -15,7 +15,12 @@ exports.getAllEnquiriesForVendor = async (req, res) => {
     // Find enquiries linked to vendor's properties
     const enquiries = await Enquiry.find({ propertyId: { $in: propertyIds } })
       .populate('userId', 'name email')
-      .populate('propertyId', 'property_type property_price address');
+      .populate({
+        path: 'propertyId',
+        populate: {
+          path: 'created_by' 
+        }
+      });
 
     res.status(200).json({ success: true, enquiries });
   } catch (error) {

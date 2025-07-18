@@ -8,13 +8,18 @@ const PrivateNoteSchema = new mongoose.Schema({
 const PropertySchema = new mongoose.Schema({
   property_type: { type: String, required: true },
   property_price: { type: Number, required: true },
-  price_per_cent: { type: Number },   
+  price_per_cent: { type: Number },
+  house_type: {
+    type: String,
+    enum: ['new house', 'used house', 'under construction'],
+    required: true
+  },
   area: { type: Number, },
-  carpet_area: { type: Number },         
-  car_parking: { type: Number },       
-  car_access: { type:String },         
-  floor: { type: Number },              
-  road_frontage: { type: Number },      
+  carpet_area: { type: Number },
+  car_parking: { type: Number },
+  car_access: { type: String },
+  floor: { type: Number },
+  road_frontage: { type: Number },
   whats_nearby: { type: String },
   buildIn: { type: String },
   cent: { type: String },
@@ -25,7 +30,7 @@ const PropertySchema = new mongoose.Schema({
   address: { type: String, required: true },
   zipcode: { type: String },
   locationmark: { type: String },
-  isFeatured: { type: Boolean, default: false },  
+  isFeatured: { type: Boolean, default: false },
   isLatest: { type: Boolean, default: true },
   coordinates: {
     latitude: { type: Number },
@@ -43,7 +48,7 @@ const PropertySchema = new mongoose.Schema({
     type: String,
     enum: ['Admin', 'Vendor']
   },
-  productCode:{type:String , unique: true},
+  productCode: { type: String, unique: true },
   isApproved: { type: Boolean, default: true },
   created_at: { type: Date, default: Date.now }
 });
